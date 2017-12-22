@@ -6,23 +6,30 @@ from PIL import Image
 import BilateralFilter2D as bilat
 import StructureTensor2D as ST
 import Vesselness2D as Vessel
-import GuidedFilter as gf
+import GuidedFilterSourceCode as gf
 import time
+import cv2
 
 
 # Load image 'coronaries.jpg' as grayscale image and convert it to
 # a float32 scale with grayvalues ranging from [0,1]
-image = Image.open('crack.tif').convert("L")
+img_nocrack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000831_Keincrack.tif",0)
+img_crack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000231_crack.tif",0)
+img_crack2 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000281_crack.tif",0)
+img_crack3 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000001220_crack.tif",0)
+
+image = Image.open('D://oezkan/Data/MASTERTHESIS_EL_start/0000000831_Keincrack.tif').convert("L")
 image = np.asarray(image)
 image = image.astype(np.float32) / 255.0
-image = image[500:1500,500:1500]
+#image = image[500:1500,500:1500]
+
 #image = skimage.util.random_noise(image, mode='gaussian', var = 0.0005)
 #plt.imsave("coronaries_noisy.jpg",image,cmap='gray')
 #Bilateral Filter Test
 #bilatResult = bilat.bilateralFilter(image, 3 ,40.0, 0.1)
 
 start = time.time()
-bilatResult = gf.guided_Filter(image,image,5,0.3**2)
+bilatResult = gf.guided_Filter(image,image,16,0.3**2)
 stop = time.time()
 print(stop-start)
 

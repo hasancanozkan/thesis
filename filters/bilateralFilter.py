@@ -18,11 +18,11 @@ bl_nocrack1 = cv2.bilateralFilter(img_nocrack1,5,75,75)
 print(time.time() - start_time1)
 
 start_time1 = time.time()
-bl_crack1 = cv2.bilateralFilter(img_crack1,5,75,75)
+bl_crack1 = cv2.bilateralFilter(img_crack1,5,150,150)
 print(time.time() - start_time1)  
 
 start_time1 = time.time()
-bl_crack2 = cv2.bilateralFilter(img_crack2,5,75,75)
+bl_crack2 = cv2.bilateralFilter(img_crack2,9,75,75)
 print(time.time() - start_time1) 
 
 start_time1 = time.time()
@@ -34,15 +34,15 @@ print(time.time() - start_time1)
 # Original images
 plt.subplot(3,4,1),plt.imshow(img_nocrack1,"gray"),plt.title('Original_nocrack')
 plt.xticks([]), plt.yticks([])
-plt.subplot(3,4,2),plt.imshow(img_crack1,"gray"),plt.title('Bilateral')
+plt.subplot(3,4,2),plt.imshow(img_crack1,"gray"),plt.title('crack_1')
 plt.xticks([]), plt.yticks([])
-plt.subplot(3,4,3),plt.imshow(img_crack2,"gray"),plt.title('Bilateral')
+plt.subplot(3,4,3),plt.imshow(img_crack2,"gray"),plt.title('crack_2')
 plt.xticks([]), plt.yticks([])
-plt.subplot(3,4,4),plt.imshow(img_crack3,"gray"),plt.title('Bilateral')
+plt.subplot(3,4,4),plt.imshow(img_crack3,"gray"),plt.title('crack_3')
 plt.xticks([]), plt.yticks([])
 
 #Bilateral Filter
-plt.subplot(3,4,5),plt.imshow(bl_nocrack1,"gray"),plt.title('Original_nocrack')
+plt.subplot(3,4,5),plt.imshow(bl_nocrack1,"gray"),plt.title('Bilateral_nocrack')
 plt.xticks([]), plt.yticks([])
 plt.subplot(3,4,6),plt.imshow(bl_crack1,"gray"),plt.title('Bilateral_crack1')
 plt.xticks([]), plt.yticks([])
