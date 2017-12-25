@@ -1,34 +1,97 @@
 '''
 Created on 22.12.2017
 
-For some reason the filter does not affect on image 
-maybe it is not compatible with python 2.7, the sourcecode was for Python 3.0._
 @author: oezkan
 '''
 import cv2
 from cv2.ximgproc import guidedFilter
 from matplotlib import pyplot as plt
 import time
+from PIL import Image
+import numpy as np
 
 
+# Load image as grayscale image and convert it to
+# a float32 scale with grayvalues ranging from [0,1]
 img_nocrack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000831_Keincrack.tif",0)
-img_crack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000231_crack.tif",0)
-img_crack2 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000281_crack.tif",0)
-img_crack3 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000001220_crack.tif",0)
+img_nocrack1 = img_nocrack1.astype(np.float32) / 255.0
+
+img_crack1 = img_crack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000231_crack.tif",0)
+img_crack1 = img_crack1.astype(np.float32) / 255.0
+
+img_crack2 = img_crack2 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000281_crack.tif",0)
+img_crack2 = img_crack2.astype(np.float32) / 255.0
+
+img_crack3 = img_crack3 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000001220_crack.tif",0)
+img_crack3 = img_crack3.astype(np.float32) / 255.0
 
 start_time1 = time.time()
-#bl_nocrack1 = cv2.bilateralFilter(img_nocrack1,5,75,75)
-gf_nocrack1 = guidedFilter(img_crack1, img_crack1, 16, 0.09)
+gf_nocrack1 = guidedFilter(img_nocrack1, img_nocrack1, 4, 0.2**2)
 print(time.time() - start_time1)
 
-print gf_nocrack1[150,150]
-print img_crack1[150,150]
+start_time1 = time.time()
+gf_crack1 = guidedFilter(img_crack1, img_crack1, 4, 0.2**2)
+print(time.time() - start_time1)
 
-plt.subplot(1,2,1),plt.imshow(img_crack1,"gray"),plt.title('Original')
+start_time1 = time.time()
+gf_crack2 = guidedFilter(img_crack2, img_crack2, 4, 0.2**2)
+print(time.time() - start_time1)
+
+start_time1 = time.time()
+gf_crack3 = guidedFilter(img_crack3, img_crack3, 4, 0.2**2)
+print(time.time() - start_time1)
+
+# Original images
+plt.subplot(3,4,1),plt.imshow(img_nocrack1,"gray"),plt.title('Original_nocrack')
 plt.xticks([]), plt.yticks([])
-plt.subplot(1,2,2),plt.imshow(gf_nocrack1,"gray"),plt.title('Guided')
+plt.subplot(3,4,2),plt.imshow(img_crack1,"gray"),plt.title('crack_1')
+plt.xticks([]), plt.yticks([])
+plt.subplot(3,4,3),plt.imshow(img_crack2,"gray"),plt.title('crack_2')
+plt.xticks([]), plt.yticks([])
+plt.subplot(3,4,4),plt.imshow(img_crack3,"gray"),plt.title('crack_3')
 plt.xticks([]), plt.yticks([])
 
-plt.show()
+#Bilateral Filter
+plt.subplot(3,4,5),plt.imshow(gf_nocrack1,"gray"),plt.title('Guided_nocrack')
+plt.xticks([]), plt.yticks([])
+plt.subplot(3,4,6),plt.imshow(gf_crack1,"gray"),plt.title('Guided_crack1')
+plt.xticks([]), plt.yticks([])
+plt.subplot(3,4,7),plt.imshow(gf_crack2,"gray"),plt.title('Guided_crack2')
+plt.xticks([]), plt.yticks([])
+plt.subplot(3,4,8),plt.imshow(gf_crack3,"gray"),plt.title('Guided_crack3')
+plt.xticks([]), plt.yticks([])
 
-cv2.imwrite('gf_nocrack1.tif',gf_nocrack1)
+#Differences
+plt.subplot(3,4,9),plt.imshow(img_nocrack1 - gf_nocrack1,"gray"),plt.title('Difference')
+plt.xticks([]), plt.yticks([])
+plt.subplot(3,4,10),plt.imshow(img_crack1 - gf_crack1,"gray"),plt.title('Difference')
+plt.xticks([]), plt.yticks([])
+plt.subplot(3,4,11),plt.imshow(img_crack2 - gf_crack2,"gray"),plt.title('Difference')
+plt.xticks([]), plt.yticks([])
+plt.subplot(3,4,12),plt.imshow(img_crack3 - gf_crack3,"gray"),plt.title('Difference')
+plt.xticks([]), plt.yticks([])
+
+plt.show() 
+
+#convert the images back
+
+
+gf_nocrack1 = np.uint8(gf_nocrack1*255)
+gf_crack1 = np.uint8(gf_crack1*255)
+gf_crack2 = np.uint8(gf_crack2*255)
+gf_crack3 = np.uint8(gf_crack3*255)
+
+
+"""
+imageArray = [gf_nocrack1, gf_crack1, gf_crack2, gf_crack3]
+
+for i in range(len(imageArray)):
+    cv2.imwrite('{imageArray[i]}.tif', imageArray[i])
+   """     
+
+#save images
+cv2.imwrite('gf_nocrack1.tif', gf_nocrack1)
+cv2.imwrite('gf_crack1.tif',gf_crack1)
+cv2.imwrite('gf_crack2.tif',gf_crack2)
+cv2.imwrite('gf_crack3.tif',gf_crack3)
+

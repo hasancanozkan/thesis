@@ -14,7 +14,7 @@ img_crack2 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000281_crack.
 img_crack3 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000001220_crack.tif",0)
 
 start_time1 = time.time()
-bl_nocrack1 = cv2.bilateralFilter(img_nocrack1,5,75,75)
+bl_nocrack1 = cv2.bilateralFilter(img_nocrack1,9,75,75)
 print(time.time() - start_time1)
 
 start_time1 = time.time()
