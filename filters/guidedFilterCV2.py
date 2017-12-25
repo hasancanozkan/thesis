@@ -7,7 +7,6 @@ import cv2
 from cv2.ximgproc import guidedFilter
 from matplotlib import pyplot as plt
 import time
-from PIL import Image
 import numpy as np
 
 
