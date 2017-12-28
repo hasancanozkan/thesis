@@ -25,7 +25,7 @@ cA, (cH,cV,cD) = coeffs
 """
 start_time1 = time.time()
 #2D multilevel decomposition
-coeffs = pywt.wavedec2(img_nocrack1, wavelet='haar', level=4) 
+coeffs = pywt.wavedec2(img_nocrack1, wavelet='haar',level=1) 
 
 #this is how pywt library shows to make coefficients zero but doesnt work
 #coeffs[2] == tuple([np.zeros_like(v) for v in coeffs[2]])

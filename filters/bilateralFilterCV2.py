@@ -18,7 +18,7 @@ bl_nocrack1 = cv2.bilateralFilter(img_nocrack1,9,75,75)
 print(time.time() - start_time1)
 
 start_time1 = time.time()
-bl_crack1 = cv2.bilateralFilter(img_crack1,5,150,150)
+bl_crack1 = cv2.bilateralFilter(img_crack1,9,75,75)
 print(time.time() - start_time1)  
 
 start_time1 = time.time()
@@ -26,7 +26,7 @@ bl_crack2 = cv2.bilateralFilter(img_crack2,9,75,75)
 print(time.time() - start_time1) 
 
 start_time1 = time.time()
-bl_crack3 = cv2.bilateralFilter(img_crack3,5,75,75)
+bl_crack3 = cv2.bilateralFilter(img_crack3,9,75,75)
 print(time.time() - start_time1) 
 
 
