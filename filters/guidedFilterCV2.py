@@ -40,6 +40,7 @@ start_time1 = time.time()
 gf_crack3 = guidedFilter(img_crack3, img_crack3, 4, 0.2**2)
 print(time.time() - start_time1)
 
+"""
 # Original images
 plt.subplot(3,4,1),plt.imshow(img_nocrack1,"gray"),plt.title('Original_nocrack')
 plt.xticks([]), plt.yticks([])
@@ -71,6 +72,7 @@ plt.subplot(3,4,12),plt.imshow(img_crack3 - gf_crack3,"gray"),plt.title('Differe
 plt.xticks([]), plt.yticks([])
 
 plt.show() 
+"""
 
 #convert the images back
 
@@ -79,14 +81,7 @@ gf_nocrack1 = np.uint8(gf_nocrack1*255)
 gf_crack1 = np.uint8(gf_crack1*255)
 gf_crack2 = np.uint8(gf_crack2*255)
 gf_crack3 = np.uint8(gf_crack3*255)
-
-
-"""
-imageArray = [gf_nocrack1, gf_crack1, gf_crack2, gf_crack3]
-
-for i in range(len(imageArray)):
-    cv2.imwrite('{imageArray[i]}.tif', imageArray[i])
-   """     
+    
 
 #save images
 cv2.imwrite('gf_nocrack1.tif', gf_nocrack1)

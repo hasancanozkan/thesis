@@ -30,7 +30,7 @@ bl_crack3 = cv2.bilateralFilter(img_crack3,9,75,75)
 print(time.time() - start_time1) 
 
 
-
+"""
 # Original images
 plt.subplot(3,4,1),plt.imshow(img_nocrack1,"gray"),plt.title('Original_nocrack')
 plt.xticks([]), plt.yticks([])
@@ -62,7 +62,7 @@ plt.subplot(3,4,12),plt.imshow(img_crack3 - bl_crack3,"gray"),plt.title('Differe
 plt.xticks([]), plt.yticks([])
 
 plt.show() 
-
+"""
 #save images
 cv2.imwrite('bl_nocrack.tif',bl_nocrack1)
 cv2.imwrite('bl_crack1.tif',bl_crack1)
