@@ -8,38 +8,41 @@ from matplotlib import pyplot as plt
 import numpy as np
 import cv2
 import time
-from PIL import Image
+from numpy import imag
 
+def mad(arr):
+    """ Median Absolute Deviation: a "Robust" version of standard deviation.
+        Indices variabililty of the sample. 
+    """
+    arr = np.ma.array(arr).compressed()
+    med = np.median(arr)
+    return np.median(np.abs(arr - med))
+
+# load the images
 img_nocrack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000831_Keincrack.tif",0)
-#img_nocrack1 = np.asarray(img_nocrack1)
+img_crack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000231_crack.tif",0)
+img_crack2 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000281_crack.tif",0)
+img_crack3 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000001220_crack.tif",0)
 
-"""
-start_time1 = time.time()
-wp = pywt.WaveletPacket2D(data=img_nocrack1, wavelet='haar', mode='symmetric')
-print(time.time() - start_time1)
-"""
-"""
-#pywt.dwt2(data, wavelet, mode='symmetric', axes=(-2, -1))
-coeffs = pywt.dwt2(img_nocrack1, 'haar') # tuple
-cA, (cH,cV,cD) = coeffs
-"""
+
+image = np.float32(img_nocrack1)
+image /= 255
+
 start_time1 = time.time()
 #2D multilevel decomposition
-coeffs = pywt.wavedec2(img_nocrack1, wavelet='haar',level=1) 
+level = 1
+coeffs= pywt.wavedec2(image, wavelet='haar',level=level) 
 
-#this is how pywt library shows to make coefficients zero but doesnt work
-#coeffs[2] == tuple([np.zeros_like(v) for v in coeffs[2]])
-#2D multilevel reconstruction 
-recon_img = pywt.waverec2(coeffs, wavelet='haar')
+#calculate the threshold
+sigma = mad(coeffs[-level])
+threshold = sigma*np.sqrt( 2*np.log(image.size)) 
+newCoeffs = map (lambda x: pywt.threshold(x,threshold,mode='soft'),coeffs)
+
+
+recon_img = pywt.waverec2(newCoeffs, wavelet='haar')
+recon_img *= 255
+recon_img=np.uint8(recon_img)
+
 print(time.time() - start_time1)
 
-recon_img=np.uint8(recon_img)
-#recon_img_1 = Image.fromarray(recon_img, 'L')
-
-plt.subplot(1,2,1),plt.imshow(img_nocrack1,"gray"),plt.title('Original_nocrack')
-plt.xticks([]), plt.yticks([])
-plt.subplot(1,2,2),plt.imshow(recon_img,"gray"),plt.title('crack_1')
-plt.xticks([]), plt.yticks([])
-
-plt.show()
-
+cv2.imwrite('wavepic.tif',recon_img)
