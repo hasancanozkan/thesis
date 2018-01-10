@@ -7,7 +7,9 @@ import cv2
 import numpy as np
 from scipy import signal
 import time
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
+from PIL import Image
+
 
 
 def dht2(img):
@@ -72,30 +74,38 @@ def idht2(approx, detailH, detailV, detailD):
 
     return img
 
-img = cv2.imread('0000000831_Keincrack.tif', cv2.IMREAD_GRAYSCALE)
+img = cv2.imread('0000000231_crack.tif', cv2.IMREAD_GRAYSCALE)
 img = img.astype(np.float32)
 img /= 255.0
 
-start_time1 = time.time()
 [approx, detailH, detailV, detailD] = dht2(img)
 img_r = idht2(approx, detailH, detailV, detailD)
-print(time.time() - start_time1)  
 
-plt.subplot(1,3,1),plt.imshow(approx,"gray"),plt.title('111')
+#plt.subplot(1,3,1),plt.imshow(approx,"gray"),plt.title('111')
 
+normalizedImg = cv2.normalize(detailH, 0, 255, cv2.NORM_MINMAX)
+normalizedImg *=255
+normalizedImg = np.uint8(normalizedImg)
+cv2.imwrite('detailH.tif',normalizedImg)
+
+"""
+aprrox_float = Image.fromarray(approx)
+aprrox_float.save("approx_float.tif","TIFF")
 approx *= 255
 approx=np.uint8(approx)
-plt.subplot(1,3,2),plt.imshow(approx,"gray"),plt.title('222')
+"""
 
-plt.subplot(1,3,3),plt.imshow(detailV,"gray"),plt.title('333')
+#plt.subplot(1,3,2),plt.imshow(approx,"gray"),plt.title('222')
+
+#plt.subplot(1,3,3),plt.imshow(detailV,"gray"),plt.title('333')
 
 detailV *= 255
 detailV = np.uint8(detailV)
-plt.show()
+#plt.show()
 
 img_r *=255
 img_r = np.uint8(img_r)
-
+"""
 cv2.imwrite('haar_approx.tif',approx)
 cv2.imwrite('haar_detailV.tif',detailV)
-cv2.imwrite('img_r.tif',img_r)
+cv2.imwrite('img_r.tif',img_r)"""
