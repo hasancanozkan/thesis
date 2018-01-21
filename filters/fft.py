@@ -17,7 +17,7 @@ img = np.float32(img)
 #mask image and normalize
 mask = cv2.imread('ModQ_EL_Poly-Bereket3.tif',0)
 mask = np.float32(mask)
-#mask = cv2.normalize(mask,0,1,cv2.NORM_MINMAX)
+mask = cv2.normalize(mask,0,1,cv2.NORM_MINMAX)
 
 start_time1 = time.time()
 dft = cv2.dft(img,flags = cv2.DFT_COMPLEX_OUTPUT)#1204,1024,2L
@@ -43,7 +43,12 @@ normalizedImg = cv2.normalize(img_back, 0, 255, cv2.NORM_MINMAX)
 normalizedImg *=255
 normalizedImg = np.uint8(normalizedImg)
 #save image
-cv2.imwrite('fft.tif',normalizedImg)
+#cv2.imwrite('fft.tif',normalizedImg)
 #show image
-#plt.imshow(img_back,cmap='gray')
-#plt.show()
+plt.subplot(1,3,1),plt.imshow(normalizedImg,cmap='gray'),plt.title('normalized')
+plt.xticks([]), plt.yticks([])
+plt.subplot(1,3,2),plt.imshow(img_back,cmap='gray'),plt.title('img_back')
+plt.xticks([]), plt.yticks([])
+plt.subplot(1,3,3),plt.imshow(cv2.imread('originalImages/0000331736.tif',0),cmap='gray'),plt.title('img')
+plt.xticks([]), plt.yticks([])
+plt.show()
