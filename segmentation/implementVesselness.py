@@ -6,7 +6,7 @@ Created on 21.01.2018
 import Vesselness2D as vs
 import cv2
 import time
-from matplotlib import pyplot as pltimport multiprocessing as mp
+from matplotlib import pyplot as plt
 
 img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/fft.tif',0)
 img2 = cv2.imread('C:/Users/oezkan/HasanCan/fft and ROI from andreas/000-filteredImage.tif',0)
