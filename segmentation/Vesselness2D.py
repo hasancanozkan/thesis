@@ -3,7 +3,7 @@ from scipy.ndimage.filters import gaussian_filter
 
 #Initialization of constants
 beta = 0.5
-c = 0.08
+c = 4
 eps = 0.0000001
 
 #Calculate the Vesselness-Filter from Frangi
@@ -39,13 +39,14 @@ def calculateVesselness2D(image, s):
         for y in range(0,dx2.shape[1]):
 
             eigenvalues = np.linalg.eigvals(np.array([[dx2[x,y] , dxy[x,y]],[dyx[x,y], dy2[x,y]]],np.float32))
-
+            eigenvalues = np.real(eigenvalues)
             if(np.abs(eigenvalues[0])>np.abs(eigenvalues[1])):
                 buf = eigenvalues[0]
                 eigenvalues[0] = eigenvalues[1]
                 eigenvalues[1] = buf
 
             vesselness[x,y] = vesselnessMeasure(eigenvalues)
+
 
     # return the resulting vesselness image
     return vesselness
