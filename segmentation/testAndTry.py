@@ -11,18 +11,21 @@ import time
 import numpy as np
 from sklearn.metrics import classification_report
 
-img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/fft.tif',0)
 labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/crack_label.tif')
 img2 = cv2.imread('C:/Users/oezkan/HasanCan/fft and ROI from andreas/000-filteredImage.tif',0)
-ROI = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/201-ErodeMask.tif',0)
+#ROI = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/201-ErodeMask.tif',0)
+img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000598291_fft.tif',0)
 
 
+_,ROI = cv2.threshold(img,40,255,cv2.THRESH_BINARY)
+print ROI
+"""
 _, labeled_crack = cv2.threshold(labeled_crack[:,:,2],127,255,cv2.THRESH_BINARY)
 kernel_label = np.ones((2,2),np.uint8)
 labeled_crack = cv2.dilate(labeled_crack,kernel_label,iterations =2)
 
 img = cv2.equalizeHist(img)
-img = cv2.bilateralFilter(img,5,75,75)
+img = cv2.bilateralFilter(img,25,75,75)
 
 kernel_ROI = np.ones((5,5),np.uint8)
 ROI = cv2.erode(ROI,kernel_ROI,iterations = 3)
@@ -51,16 +54,13 @@ defectImage = np.zeros((img_thresh.shape))
 cv2.drawContours(defectImage, defects, -1, 1, -1)
 defectImage = img_as_ubyte(defectImage)
 _, defectImage = cv2.threshold(defectImage,120,255,cv2.THRESH_BINARY)
-    
+"""    
     
 
-plt.subplot(131),plt.imshow(img_thresh,"gray"),plt.title('hist-changed')
+plt.subplot(121),plt.imshow(ROI,"gray"),plt.title('hist-changed')
 plt.xticks([]), plt.yticks([])
-plt.subplot(132),plt.imshow(img_morph1,"gray"),plt.title('frangi')
-plt.xticks([]), plt.yticks([])
-plt.subplot(133),plt.imshow(defectImage,"gray"),plt.title('morph 10')
+plt.subplot(122),plt.imshow(img,"gray"),plt.title('morph 10')
 plt.xticks([]), plt.yticks([])
 plt.show()
-
 
 
