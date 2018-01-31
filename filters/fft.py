@@ -11,7 +11,7 @@ import time
 
 #import time
 
-img = cv2.imread('originalImages/0000331736.tif',0)
+img = cv2.imread('originalImages/0000720893.tif',0)
 img = np.float32(img)
 
 #mask image and normalize
@@ -42,13 +42,16 @@ print(time.time() - start_time1)
 normalizedImg = cv2.normalize(img_back, 0, 255, cv2.NORM_MINMAX)
 normalizedImg *=255
 normalizedImg = np.uint8(normalizedImg)
+
 #save image
-#cv2.imwrite('fft.tif',normalizedImg)
+cv2.imwrite('0000720893_fft.tif',normalizedImg)
+
 #show image
+
 plt.subplot(1,3,1),plt.imshow(normalizedImg,cmap='gray'),plt.title('normalized')
 plt.xticks([]), plt.yticks([])
 plt.subplot(1,3,2),plt.imshow(img_back,cmap='gray'),plt.title('img_back')
 plt.xticks([]), plt.yticks([])
-plt.subplot(1,3,3),plt.imshow(cv2.imread('originalImages/0000331736.tif',0),cmap='gray'),plt.title('img')
+plt.subplot(1,3,3),plt.imshow(cv2.imread('originalImages/0000720893.tif',0),cmap='gray'),plt.title('img')
 plt.xticks([]), plt.yticks([])
 plt.show()
