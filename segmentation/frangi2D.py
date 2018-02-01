@@ -38,7 +38,7 @@ if MORPH:
 
     img_fr = img_as_ubyte(img_fr)
     #img_fr.astype(np.float32)
-    _, img_thresh = cv2.threshold(img_fr,120,255,cv2.THRESH_BINARY)
+    _, img_thresh = cv2.threshold(img_fr,127,255,cv2.THRESH_BINARY)
     
     # y-axes
     kernel_y = np.ones((10,1),np.uint8)

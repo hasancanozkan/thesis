@@ -13,38 +13,51 @@ from sklearn.metrics import classification_report
 
 MORPH = True
 
-#img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000598291_fft.tif',0)
+#img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/fft.tif',0)
 #ROI = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/201-ErodeMask.tif',0)
-labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689998_fft_label.tif')
+labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000720002_fft_label.tif')
 
-img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689998_fft.tif',0)
-
-
-_,ROI = cv2.threshold(img,20,255,cv2.THRESH_BINARY)
+img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000720002_fft.tif',0)
 
 
-
-start_time1 = time.time()
 # labeled signal 
 _, labeled_crack = cv2.threshold(labeled_crack[:,:,2],127,255,cv2.THRESH_BINARY)
 kernel_label = np.ones((2,2),np.uint8)
 labeled_crack = cv2.dilate(labeled_crack,kernel_label,iterations =2)
 
+
+
 img = cv2.equalizeHist(img)
-img = cv2.bilateralFilter(img,5,75,75)
+img = cv2.bilateralFilter(img,9,75,75)
+
+
+# TODO here I created my own mask, is this the right way of doing it??
+_,ROI = cv2.threshold(img,40,255,cv2.THRESH_BINARY)
+ROI /=255
 
 kernel_ROI = np.ones((3,3),np.uint8)
-ROI = cv2.dilate(ROI,kernel_ROI,iterations = 1)
+ROI = cv2.dilate(ROI,kernel_ROI,iterations = 2) # this can be erode a well
 
-img_fr = frangi(img,scale_range=(0.5,4),scale_step=0.5,beta1=0.5,beta2= 0.05)*(ROI/255)
+plt.subplot(2,2,1)
+plt.imshow(ROI,"gray"),plt.title('ROI')
+plt.xticks([]), plt.yticks([])
+plt.subplot(2,2,2)
+plt.imshow(img,"gray"),plt.title('original image')
+plt.xticks([]), plt.yticks([])
+plt.show()
+
+
+img_fr = frangi(img,scale_range=(0.5,4),scale_step=0.5,beta1=0.5,beta2= 0.05)*ROI
 kernel_fr = np.ones((2,2),np.uint8)
 img_fr = cv2.erode(img_fr,kernel_fr,iterations =2)
+
+
 
 if MORPH:
 
     img_fr = img_as_ubyte(img_fr)
     #img_fr.astype(np.float32)
-    _, img_thresh = cv2.threshold(img_fr,120,255,cv2.THRESH_BINARY)
+    _, img_thresh = cv2.threshold(img_fr,127,255,cv2.THRESH_BINARY)
     
     # y-axes
     kernel_y = np.ones((10,1),np.uint8)
@@ -56,7 +69,8 @@ if MORPH:
     
     img_morph = img_morph1 + img_morph2
     
-    contours,_ = cv2.findContours(img_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #contours,_ = cv2.findContours(img_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     defects = []
     for i in range(len(contours)):
@@ -71,7 +85,7 @@ if MORPH:
 #TODO Hough
 else:
     print("hough")
-print (time.time() - start_time1)
+
 print(classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
 
 plt.subplot(2,2,1)
