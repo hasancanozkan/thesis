@@ -10,54 +10,38 @@ from matplotlib import pyplot as plt
 import time
 import numpy as np
 from sklearn.metrics import classification_report
+from ROI_function import createROI as roi
 
 MORPH = True
 
-#img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/fft.tif',0)
-#ROI = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/201-ErodeMask.tif',0)
-labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000720002_fft_label.tif')
-
-img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000720002_fft.tif',0)
+labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689970_fft_label.tif')
+img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689970_fft.tif',0)
 
 
 # labeled signal 
 _, labeled_crack = cv2.threshold(labeled_crack[:,:,2],127,255,cv2.THRESH_BINARY)
 kernel_label = np.ones((2,2),np.uint8)
-labeled_crack = cv2.dilate(labeled_crack,kernel_label,iterations =2)
-
+labeled_crack = cv2.dilate(labeled_crack,kernel_label,iterations =1)
 
 
 img = cv2.equalizeHist(img)
-img = cv2.bilateralFilter(img,9,75,75)
+img = cv2.bilateralFilter(img,9,75,75) # I can also apply different filters
 
 
-# TODO here I created my own mask, is this the right way of doing it??
-_,ROI = cv2.threshold(img,40,255,cv2.THRESH_BINARY)
-ROI /=255
-
-kernel_ROI = np.ones((3,3),np.uint8)
-ROI = cv2.dilate(ROI,kernel_ROI,iterations = 2) # this can be erode a well
-
-plt.subplot(2,2,1)
-plt.imshow(ROI,"gray"),plt.title('ROI')
-plt.xticks([]), plt.yticks([])
-plt.subplot(2,2,2)
-plt.imshow(img,"gray"),plt.title('original image')
-plt.xticks([]), plt.yticks([])
-plt.show()
+ROI = roi(img)
 
 
 img_fr = frangi(img,scale_range=(0.5,4),scale_step=0.5,beta1=0.5,beta2= 0.05)*ROI
-kernel_fr = np.ones((2,2),np.uint8)
-img_fr = cv2.erode(img_fr,kernel_fr,iterations =2)
-
+kernel_fr = np.ones((5,5),np.uint8)
+#img_fr = cv2.erode(img_fr,kernel_fr,iterations =1)
+img_fr = cv2.morphologyEx(img_fr, cv2.MORPH_OPEN, kernel_fr)
 
 
 if MORPH:
 
     img_fr = img_as_ubyte(img_fr)
     #img_fr.astype(np.float32)
-    _, img_thresh = cv2.threshold(img_fr,127,255,cv2.THRESH_BINARY)
+    _, img_thresh = cv2.threshold(img_fr,100,255,cv2.THRESH_BINARY)
     
     # y-axes
     kernel_y = np.ones((10,1),np.uint8)
@@ -69,7 +53,6 @@ if MORPH:
     
     img_morph = img_morph1 + img_morph2
     
-    #contours,_ = cv2.findContours(img_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     defects = []
@@ -80,7 +63,7 @@ if MORPH:
     defectImage = np.zeros((img_thresh.shape))
     cv2.drawContours(defectImage, defects, -1, 1, -1)
     defectImage = img_as_ubyte(defectImage)
-    #_, defectImage = cv2.threshold(defectImage,150,255,cv2.THRESH_BINARY) # this does not make sense here
+    #_, defectImage = cv2.threshold(defectImage,200,255,cv2.THRESH_BINARY) # for now I couldn't realize any help of these
     
 #TODO Hough
 else:
