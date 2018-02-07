@@ -68,6 +68,15 @@ else:
 print (time.time() - start_time1)
 print(classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
 
+plt.subplot(1,2,1)
+plt.imshow(cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/fft.tif',0),"gray"),plt.title('original image')
+plt.xticks([]), plt.yticks([])
+plt.subplot(1,2,2)
+plt.imshow(img_fr,"gray"),plt.title('frangi')
+plt.xticks([]), plt.yticks([])
+plt.show()
+
+
 plt.subplot(2,2,1)
 plt.imshow(img_fr,"gray"),plt.title('frangi')
 plt.xticks([]), plt.yticks([])

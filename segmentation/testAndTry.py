@@ -10,15 +10,41 @@ from matplotlib import pyplot as plt
 import time
 import numpy as np
 from sklearn.metrics import classification_report
+from ROI_function import createROI as roi
+from filters.fftFunction import fft
 
-labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/crack_label.tif')
-img2 = cv2.imread('C:/Users/oezkan/HasanCan/fft and ROI from andreas/000-filteredImage.tif',0)
+#labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/crack_label.tif')
+#img2 = cv2.imread('C:/Users/oezkan/HasanCan/fft and ROI from andreas/000-filteredImage.tif',0)
 #ROI = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/201-ErodeMask.tif',0)
-img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000598291_fft.tif',0)
+img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000331736.tif',0)
+mask = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/ModQ_EL_Poly-Bereket3.tif',0)
 
 
-_,ROI = cv2.threshold(img,40,255,cv2.THRESH_BINARY)
-print ROI
+img_fft = fft(img, mask)
+
+
+
+
+"""
+defect_image = roi(img)
+defect_image = img_as_ubyte(defect_image)
+
+
+#edges_def = cv2.Canny(defect_image,100,200)
+
+lines = cv2.HoughLines(defect_image,1,np.pi/180,200)
+for rho,theta in lines[0]:
+    a = np.cos(theta)
+    b = np.sin(theta)
+    x0 = a*rho
+    y0 = b*rho
+    x1 = int(x0 + 1000*(-b))
+    y1 = int(y0 + 1000*(a))
+    x2 = int(x0 - 1000*(-b))
+    y2 = int(y0 - 1000*(a))
+
+    cv2.line(img,(x1,y1),(x2,y2),(0,0,255),10)
+"""
 """
 _, labeled_crack = cv2.threshold(labeled_crack[:,:,2],127,255,cv2.THRESH_BINARY)
 kernel_label = np.ones((2,2),np.uint8)
@@ -57,9 +83,9 @@ _, defectImage = cv2.threshold(defectImage,120,255,cv2.THRESH_BINARY)
 """    
     
 
-plt.subplot(121),plt.imshow(ROI,"gray"),plt.title('hist-changed')
+plt.subplot(121),plt.imshow(img,"gray"),plt.title('img')
 plt.xticks([]), plt.yticks([])
-plt.subplot(122),plt.imshow(img,"gray"),plt.title('morph 10')
+plt.subplot(122),plt.imshow(img_fft,"gray"),plt.title('fft')
 plt.xticks([]), plt.yticks([])
 plt.show()
 

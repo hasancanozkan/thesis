@@ -11,27 +11,36 @@ import time
 import numpy as np
 from sklearn.metrics import classification_report
 from ROI_function import createROI as roi
+from filters.fftFunction import fft
+
+
+img_raw =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalimages/0000331736.tif',0)
+mask_fft = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/ModQ_EL_Poly-Bereket3.tif',0)
+labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/crack_label.tif')
+
+
+img_filtered = cv2.bilateralFilter(img_raw,9,75,75) # I can also apply different filters
+
+# apply fft for grid fingers
+img_fft = fft(img_filtered, mask_fft)
+
 
 MORPH = True
-
-labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689970_fft_label.tif')
-img =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689970_fft.tif',0)
-
 
 # labeled signal 
 _, labeled_crack = cv2.threshold(labeled_crack[:,:,2],127,255,cv2.THRESH_BINARY)
 kernel_label = np.ones((2,2),np.uint8)
 labeled_crack = cv2.dilate(labeled_crack,kernel_label,iterations =1)
 
+#histogram equalization
+img_fft = cv2.equalizeHist(img_fft)
+img_fft = cv2.bilateralFilter(img_fft,9,75,75) # I can also apply different filters
 
-img = cv2.equalizeHist(img)
-img = cv2.bilateralFilter(img,9,75,75) # I can also apply different filters
+#creating ROI for frangi
+ROI = roi(img_fft)
 
 
-ROI = roi(img)
-
-
-img_fr = frangi(img,scale_range=(0.5,4),scale_step=0.5,beta1=0.5,beta2= 0.05)*ROI
+img_fr = frangi(img_fft,scale_range=(0.5,4),scale_step=0.5,beta1=0.5,beta2= 0.05)*ROI
 kernel_fr = np.ones((5,5),np.uint8)
 #img_fr = cv2.erode(img_fr,kernel_fr,iterations =1)
 img_fr = cv2.morphologyEx(img_fr, cv2.MORPH_OPEN, kernel_fr)
