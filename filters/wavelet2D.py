@@ -20,40 +20,46 @@ def mad(arr):
     return np.median(np.abs(arr - med))
 
 # load the images 
-img_1MB = cv2.imread("0000598257.tif",0)
+img_1MB = cv2.imread("originalImages/0000689998.tif",0)
 img_nocrack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000831_Keincrack.tif",0)
 img_crack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000231_crack.tif",0)
 img_crack2 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000281_crack.tif",0)
 img_crack3 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000001220_crack.tif",0)
-
-# convert to float32
-img = np.float32(img_crack1)
-img /= 255.0
-
+print np.max(img_1MB)
+# convert to float32  there is no change if we dont do this!!
+#img = np.float32(img_crack1)
+img = (img_1MB/255.0)
+print np.max(img)
 
 #2D multilevel decomposition
 level = 2
-wavelet = 'coif4'
+wavelet = 'haar'
  
-start_time1 = time.time()
+#start_time1 = time.time()
 #decompose to 2nd level coefficients
-[cA2,(cH2, cV2, cD2), (cH1, cV1, cD1)] =  pywt.wavedec2(img, wavelet=wavelet,level=level)
+[cA2,(cH2, cV2, cD2), (cH1, cV1, cD1)] =  pywt.wavedec2(img_1MB, wavelet=wavelet,level=level)
 coeffs = [cA2,(cH2, cV2, cD2)]
 
-"""
+
 #calculate the threshold
 sigma = mad(coeffs[-level])
-threshold_haar = sigma*np.sqrt( 2*np.log(img_crack1.size/2)) #this is soft thresholding
-newCoeffs = map (lambda x: pywt.threshold(x,threshold_haar,mode='soft'),coeffs)
-"""
+#sigma = 75
+threshold = sigma*np.sqrt( 2*np.log(img_crack1.size/2)) #this is soft thresholding
+#print threshold
+#threshold = 50
+newCoeffs = map (lambda x: pywt.threshold(x,threshold,mode='hard'),coeffs)
+
+
 #reconstruction
-recon_img = pywt.waverec2(coeffs, wavelet=wavelet)
+#recon_img = pywt.waverec2(newCoeffs, wavelet=wavelet)
+recon_img= pywt.waverec2(coeffs, wavelet=wavelet)
+print np.max(recon_img)
 
 # normalization to convert uint8
 normalizedImg = cv2.normalize(recon_img, 0, 255, cv2.NORM_MINMAX)
 normalizedImg *=255
-normalizedImg = np.uint8(normalizedImg)
-print(time.time() - start_time1)
+#print(time.time() - start_time1)
+print np.max(normalizedImg)
 
 """
 #show the chosen image
@@ -61,7 +67,7 @@ plt.imshow(normalizedImg,"gray"),plt.title('111')
 plt.show()
 """
 #save the chosen image
-cv2.imwrite('approx_crack1_coif4.tif', normalizedImg)
+cv2.imwrite('approx_crack1_hard1.tif', normalizedImg)
 
 
 """
