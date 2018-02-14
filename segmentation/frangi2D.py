@@ -50,7 +50,7 @@ if MORPH:
     
     img_morph = img_morph1 + img_morph2
     
-    contours,_ = cv2.findContours(img_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _,contours,_ = cv2.findContours(img_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     defects = []
     for i in range(len(contours)):

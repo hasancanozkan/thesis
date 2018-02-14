@@ -9,8 +9,9 @@ import time
 import AnisotropicDiffusionSourceCode as ad
 import numpy as np
 
-img_crack1 = img_crack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000231_crack.tif",0)
-img_crack2 = img_crack2 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000281_crack.tif",0)
+img_1MB = cv2.imread("originalImages/0000689998.tif",0)
+img_crack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000231_crack.tif",0)
+img_crack2= cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000281_crack.tif",0)
 img_nocrack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000831_Keincrack.tif",0)
 img_crack3 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000001220_crack.tif",0)
 
@@ -38,7 +39,7 @@ print(time.time() - start_time1)
 """
 #kappa --> 25,50,100 with 10 iterations and step 1. option1
 start_time1 = time.time()
-ad_crack1_it10_st1_k50_g10_o1 = ad.anisodiff(img_crack1, niter=10,step= (1.,1.), kappa=50,gamma=0.10, option=1)
+ad_crack1_it10_st1_k50_g10_o1 = ad.anisodiff(img_1MB, niter=10,step= (1.,1.), kappa=50,gamma=0.10, option=1)
 print(time.time() - start_time1)
 start_time1 = time.time()
 ad_crack2_it10_st1_k50_g10_o1 = ad.anisodiff(img_crack2, niter=10,step= (1.,1.), kappa=50,gamma=0.10, option=1)
@@ -130,10 +131,12 @@ cv2.imwrite('ad_crack1_it20_st1_k25_g10_o1.tif',ad_crack1_it20_st1_k25_g10_o1)
 cv2.imwrite('ad_crack1_it10_st25_k25_g10_o1.tif',ad_crack1_it10_st25_k25_g10_o1)
 cv2.imwrite('ad_crack1_it10_st5_k25_g10_o1.tif',ad_crack1_it10_st5_k25_g10_o1)
 """
+"""
 cv2.imwrite('ad_crack1_it10_st1_k50_g10_o1.tif',ad_crack1_it10_st1_k50_g10_o1)
 cv2.imwrite('ad_crack2_it10_st1_k50_g10_o1.tif',ad_crack2_it10_st1_k50_g10_o1)
 cv2.imwrite('ad_crack3_it10_st1_k50_g10_o1.tif',ad_crack3_it10_st1_k50_g10_o1)
 cv2.imwrite('ad_nocrack1_it10_st1_k50_g10_o1.tif',ad_nocrack1_it10_st1_k50_g10_o1)
+"""
 """cv2.imwrite('ad_crack1_it10_st1_k100_g10_o1.tif',ad_crack1_it10_st1_k100_g10_o1)
 cv2.imwrite('ad_crack1_it10_st1_k50_g25_o1.tif',ad_crack1_it10_st1_k50_g25_o1)
 #option2

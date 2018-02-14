@@ -11,12 +11,12 @@ import time
 import numpy as np
 from sklearn.metrics import classification_report
 from ROI_function import createROI as roi
-from filters.fftFunction import fft
+from fftFunction import fft
 
 
-img_raw =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalimages/0000331736.tif',0)
+img_raw =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689998_fft.tif',0)
 mask_fft = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/ModQ_EL_Poly-Bereket3.tif',0)
-labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/crack_label.tif')
+labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689998_fft_label.tif')
 
 
 img_filtered = cv2.bilateralFilter(img_raw,9,75,75) # I can also apply different filters
@@ -62,7 +62,7 @@ if MORPH:
     
     img_morph = img_morph1 + img_morph2
     
-    contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     defects = []
     for i in range(len(contours)):
