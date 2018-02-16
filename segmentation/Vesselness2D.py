@@ -2,8 +2,7 @@ import numpy as np
 from scipy.ndimage.filters import gaussian_filter 
 
 #Initialization of constants
-beta = 0.5
-c = 4
+
 eps = 0.0000001
 
 #Calculate the Vesselness-Filter from Frangi
@@ -12,7 +11,7 @@ eps = 0.0000001
 #   s: sigma for gauss filter
 #Output parameters: 
 #   vesselness: 2-D image
-def calculateVesselness2D(image, s):
+def calculateVesselness2D(image, s, beta, c):
     # create empty result image
     vesselness = np.zeros(image.shape)
     # gauss filter the input with given sigma
@@ -45,7 +44,7 @@ def calculateVesselness2D(image, s):
                 eigenvalues[0] = eigenvalues[1]
                 eigenvalues[1] = buf
 
-            vesselness[x,y] = vesselnessMeasure(eigenvalues)
+            vesselness[x,y] = vesselnessMeasure(eigenvalues,beta,c)
 
 
     # return the resulting vesselness image
@@ -53,15 +52,15 @@ def calculateVesselness2D(image, s):
 
 #Calculate the 2-D Vesselness Measure (see Frangi paper or lecture slides)
 #Use the provides 'c' and 'b' variable from the initialization
-def vesselnessMeasure(eigenvalues):
-    if(eigenvalues[1] > 0):
+def vesselnessMeasure(eigenvalues,beta,c):
+    if(eigenvalues[0] > 0):
         return 0
     else:
-        if(eigenvalues[1] == 0):
-            eigenvalues[1] = eps 
+        if(eigenvalues[0] == 0):
+            eigenvalues[0] = eps 
         
-        RB = eigenvalues[0]/eigenvalues[1]
-        S = np.sqrt(eigenvalues[0]**2 + eigenvalues[1]**2)
+        RB = eigenvalues[1]/eigenvalues[0]
+        S = np.sqrt(eigenvalues[1]**2 + eigenvalues[0]**2)
         return np.exp(-(RB**2)/(2*beta**2))*(1-np.exp(-(S**2)/(2*c**2)))
 
 #Takes four vesselness images and gets sets the max value to a result

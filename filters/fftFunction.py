@@ -23,7 +23,7 @@ def fft(img,mask):
     fshift_real = dft_shift[:,:,0]*mask #1024,1024
     fshift_imaginary = dft_shift[:,:,1]*mask
     
-    fshift=np.zeros((1024,1024,2))
+    fshift=np.zeros((len(mask),len(mask),2))
     fshift[:,:,0] = fshift_imaginary
     fshift[:,:,1] = fshift_real 
     
