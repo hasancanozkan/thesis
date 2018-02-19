@@ -14,7 +14,7 @@ from ROI_function import createROI as roi
 from fftFunction import fft
 
 
-img_raw =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689998_fft.tif',0)
+img_raw =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000689998.tif',0)
 mask_fft = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/ModQ_EL_Poly-Bereket3.tif',0)
 labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/fftResults/0000689998_fft_label.tif')
 
@@ -33,7 +33,7 @@ kernel_label = np.ones((2,2),np.uint8)
 labeled_crack = cv2.dilate(labeled_crack,kernel_label,iterations =1)
 
 #histogram equalization
-img_fft = cv2.equalizeHist(img_fft)
+img_fft = cv2.equalizeHist(img_fft) # if not at the end I got a black image
 img_fft = cv2.bilateralFilter(img_fft,9,75,75) # I can also apply different filters
 
 #creating ROI for frangi
@@ -41,6 +41,11 @@ ROI = roi(img_fft)
 
 
 img_fr = frangi(img_fft,scale_range=(0.5,4),scale_step=0.5,beta1=0.5,beta2= 0.05)*ROI
+
+plt.imshow(img_fr,"gray"),plt.title('img_fr')
+plt.xticks([]), plt.yticks([])
+plt.show()
+
 kernel_fr = np.ones((5,5),np.uint8)
 #img_fr = cv2.erode(img_fr,kernel_fr,iterations =1)
 img_fr = cv2.morphologyEx(img_fr, cv2.MORPH_OPEN, kernel_fr)
@@ -81,7 +86,7 @@ else:
 print(classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
 
 plt.subplot(2,2,1)
-plt.imshow(img_fr,"gray"),plt.title('frangi')
+plt.imshow(img_fr,"gray"),plt.title('frangi25_3')
 plt.xticks([]), plt.yticks([])
 plt.subplot(2,2,2)
 plt.imshow(defectImage,"gray"),plt.title('thresholded and morphed frangi')

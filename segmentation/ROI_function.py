@@ -6,6 +6,7 @@ Created on 01.02.2018
 
 import cv2
 import numpy as np
+from random import randint
 
 def createROI(img):
 
@@ -24,8 +25,20 @@ def createROI(img):
     img_morph1 = cv2.morphologyEx(ROI, cv2.MORPH_OPEN, kernel_y)
 
     img_morph = img_morph2 * img_morph1
+    
+    '''
+        I add the rest for not considering the '0' values
+        for now it didnt worked
+    '''
+    #imgToFrangi = img*img_morph
+    """for i in range(len(imgToFrangi)):
+        for j in range(len(imgToFrangi)):
+            if imgToFrangi[i,j] == 0 or imgToFrangi[i,j] == 255:
+                imgToFrangi[i,j] = randint(1,254)
+        
+    """
     return img_morph 
-"""
+""" 
     _, contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     defects = []

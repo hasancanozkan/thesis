@@ -2,15 +2,17 @@ import numpy as np
 from scipy.ndimage.filters import gaussian_filter 
 
 #Initialization of constants
-
 eps = 0.0000001
 
+'''
 #Calculate the Vesselness-Filter from Frangi
 #Input parameters: 
 #   image: 2-D image
 #   s: sigma for gauss filter
 #Output parameters: 
 #   vesselness: 2-D image
+'''
+
 def calculateVesselness2D(image, s, beta, c):
     # create empty result image
     vesselness = np.zeros(image.shape)
@@ -29,11 +31,12 @@ def calculateVesselness2D(image, s, beta, c):
     dy2 = dy2*s**2
     dxy = dxy*s**2
     dyx = dyx*s**2
-
+    '''
     # 1) Get eigenvalues of Hessian for each pixel
     # 2) Sort the eigenvalues ascending such that |ev_1| < |ev_2|
     # 3) Call the vesselnessMeasure(eigenvalues) function and set the
     #    calculated value to the specific pixel
+    '''
     for x in range(0,dx2.shape[0]):
         for y in range(0,dx2.shape[1]):
 
@@ -49,9 +52,10 @@ def calculateVesselness2D(image, s, beta, c):
 
     # return the resulting vesselness image
     return vesselness
-
+'''
 #Calculate the 2-D Vesselness Measure (see Frangi paper or lecture slides)
-#Use the provides 'c' and 'b' variable from the initialization
+#Use the provided 'c' and 'b' variable 
+'''
 def vesselnessMeasure(eigenvalues,beta,c):
     if(eigenvalues[0] > 0):
         return 0
@@ -59,7 +63,7 @@ def vesselnessMeasure(eigenvalues,beta,c):
         if(eigenvalues[0] == 0):
             eigenvalues[0] = eps 
         
-        RB = eigenvalues[1]/eigenvalues[0]
+        RB = eigenvalues[0]/eigenvalues[1]
         S = np.sqrt(eigenvalues[1]**2 + eigenvalues[0]**2)
         return np.exp(-(RB**2)/(2*beta**2))*(1-np.exp(-(S**2)/(2*c**2)))
 
