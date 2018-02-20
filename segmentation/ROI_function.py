@@ -27,15 +27,21 @@ def createROI(img):
     img_morph = img_morph2 * img_morph1
     
     '''
-        I add the rest for not considering the '0' values
-        for now it didnt worked
+        the part of the code below is another way of creating ROI
+        I applied blur
     '''
-    #imgToFrangi = img*img_morph
-    """for i in range(len(imgToFrangi)):
-        for j in range(len(imgToFrangi)):
-            if imgToFrangi[i,j] == 0 or imgToFrangi[i,j] == 255:
-                imgToFrangi[i,j] = randint(1,254)
-        
+    """img = cv2.equalizeHist(img)
+
+
+    threshold_value = np.min(img) 
+    _,img_thr = cv2.threshold(img,threshold_value+50,255,cv2.THRESH_BINARY)
+
+    blur = cv2.blur(img_thr,(9,9))
+
+    _,contours,_ = cv2.findContours(blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    
+    defectImage = np.zeros((img_thr.shape))
+    cv2.drawContours(defectImage, contours, -1, 1, -1)
     """
     return img_morph 
 """ 
