@@ -14,7 +14,9 @@ from ROI_function import createROI as roi
 from fftFunction import fft
 from AnisotropicDiffusionSourceCode import anisodiff as ad
 from cv2.ximgproc import guidedFilter
+import pywt
 
+start_time1 = time.time()
 
 img_raw =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000331736.tif',0)
 mask_fft = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/ModQ_EL_Poly-Bereket3.tif',0)
@@ -39,11 +41,14 @@ img_Eq = cv2.equalizeHist(img_fft)
 #list of parameters for filters
 param_bl = [[5,9,11,13,15],[25,50,75,100,125,150]]
 param_gf = [[2,3,4,5,6,7],[0.1,0.2,0.3,0.4]]
-param_ad = [[3,5,10,15,20],[0.5,1,2,5,10]]
+param_ad = [[3,5,10,15,20],[(0.5,0.5),(1.,1.),(2.,2.),(5.,5.),(10.,10.)]]
 
 param_scale = [(0.5,0.6),(1.0,1.1),(1.5,1.6),(2.0,2.1),(2.5,2.6),(3.0,3.6),(3.5,3.6),(4.0,4.1)]
-print param_scale[0]
+
 bl_class_result = ""
+ad_class_result = ""
+gf_class_result = ""
+wave_class_result = "" 
 
 #apply the filters
 for i in range (0,4,1):
@@ -54,7 +59,7 @@ for i in range (0,4,1):
             for j in range(len(param_bl[1])):
                 #Bilateral
                 img_filtered = cv2.bilateralFilter(img_Eq,param_bl[0][i],param_bl[1][j],param_bl[1][j])
-                
+
                 #apply frangi for different scales
                 for k in range(len(param_scale)):
                     v[k] = frangi(img_filtered,scale_range=param_scale[k],scale_step=1,beta1=0.5,beta2= 0.05,  black_ridges=True)
@@ -70,16 +75,87 @@ for i in range (0,4,1):
                     output.write(bl_class_result)
     if(i == 1):
         #Anisotropic
-        img_filtered = ad(img_Eq, niter=30,step= (19.,19.), kappa=50,gamma=0.25, option=1)
+        v = [[],[],[],[],[],[],[],[]]
+        for i in range(len(param_ad[0])):
+            for j in range(len(param_ad[1])):
+                img_filtered = ad(img_Eq, niter=param_ad[0][i],step=param_ad[1][j], kappa=50,gamma=0.10, option=1)
+                img_filtered=np.uint8(img_filtered)# if not frangi does not accept img_filtered because it is float between -1 and 1
+
+                #apply frangi for different scales
+                for k in range(len(param_scale)):
+                    v[k] = frangi(img_filtered,scale_range=param_scale[k],scale_step=1,beta1=0.5,beta2= 0.05,  black_ridges=True)
+                    v[k] = img_as_ubyte(v[k])
+
+                min_img = np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(v[6],v[7]),v[5]),v[4]),v[3]),v[2]),v[1]),v[0])
+                    
+                #check f! score of all possibilities
+                new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),min_img.reshape((min_img.shape[0]*min_img.shape[1]))))
+                ad_class_result = ad_class_result+"ad_i_"+str(i)+"_j_"+str(j)+new_result
+                #save the data
+                with open('ad_classification_results.txt','w') as output:
+                    output.write(ad_class_result)
     if(i == 2):
         #GUIDED
-        img_filtered = cv2.bilateralFilter(img_Eq,9,75,75)
+        v = [[],[],[],[],[],[],[],[]]
+        for i in range(len(param_gf[0])):
+            for j in range(len(param_gf[1])):
+                img_filtered = guidedFilter(img_Eq, img_Eq, param_gf[0][i], param_gf[1][j])
+                
+                #apply frangi for different scales
+                for k in range(len(param_scale)):
+                    v[k] = frangi(img_filtered,scale_range=param_scale[k],scale_step=1,beta1=0.5,beta2= 0.05,  black_ridges=True)
+                    v[k] = img_as_ubyte(v[k])
+
+                min_img = np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(v[6],v[7]),v[5]),v[4]),v[3]),v[2]),v[1]),v[0])
+                    
+                #check f! score of all possibilities
+                new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),min_img.reshape((min_img.shape[0]*min_img.shape[1]))))
+                gf_class_result = gf_class_result+"gf_i_"+str(i)+"_j_"+str(j)+new_result
+                #save the data
+                with open('gf_classification_results.txt','w') as output:
+                    output.write(gf_class_result)
     if (i == 3):
-        #Wavelet - !!!!!!
-        img_filtered = cv2.bilateralFilter(img_Eq,9,75,75)   
+        #Wavelet
+        def mad(arr):
+            """ Median Absolute Deviation: a "Robust" version of standard deviation.
+        Indices variabililty of the sample. 
+        """
+            arr = np.ma.array(arr).compressed()
+            med = np.median(arr)
+            return np.median(np.abs(arr - med))
+        img_Eq /=255
+        level = 2
+        wavelet = 'haar'
+        #decompose to 2nd level coefficients
+        coeffs =  pywt.wavedec2(img_Eq, wavelet=wavelet,level=level)
+        v = [[],[],[],[],[],[],[],[]]
+        #calculate the threshold
+        sigma = mad(coeffs[-level])
+        threshold = sigma*np.sqrt( 2*np.log(img_Eq.size/2)) #this is soft thresholding
+        #threshold = 50
+        newCoeffs = map (lambda x: pywt.threshold(x,threshold,mode='hard'),coeffs)
 
+        #reconstruction
+        recon_img= pywt.waverec2(coeffs, wavelet=wavelet)
 
+        # normalization to convert uint8
+        img_filtered = cv2.normalize(recon_img, 0, 255, cv2.NORM_MINMAX)
+        img_filtered *=255
+        #apply frangi for different scales
+        for k in range(len(param_scale)):
+            v[k] = frangi(img_filtered,scale_range=param_scale[k],scale_step=1,beta1=0.5,beta2= 0.05,  black_ridges=True)
+            v[k] = img_as_ubyte(v[k])
 
+        min_img = np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(v[6],v[7]),v[5]),v[4]),v[3]),v[2]),v[1]),v[0])
+                    
+        #check f! score of all possibilities
+        new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),min_img.reshape((min_img.shape[0]*min_img.shape[1]))))
+        wave_class_result = wave_class_result + new_result
+        #save the data
+        with open('wave_classification_results.txt','w') as output:
+            output.write(wave_class_result)                
+
+print(time.time() - start_time1)
 
 
 """ # for now I wont use this part of code
