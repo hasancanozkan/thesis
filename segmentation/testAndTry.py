@@ -3,7 +3,7 @@ Created on Jan 23, 2018
 
 @author: HasanCan
 '''
-from skimage.filters import frangi
+from adaptedFrangi import frangi
 from skimage import img_as_ubyte
 import cv2
 from matplotlib import pyplot as plt
@@ -19,168 +19,89 @@ from Vesselness2D import calculateVesselness2D,getHighestVesselness
 import math
 
 
-img_raw =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000693108.tif',0)
+img_raw =  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000689998.tif',0)
+img_raw2=  cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000331736.tif',0)
+img_raw3 = cv2.imread('C:/Users/oezkan/HasanCan/RawImages/0000006604_bad_.tif',0)
+
 mask_fft = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/ModQ_EL_Poly-Bereket3.tif',0)
-labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000331736_CrackLabel.tif') # as a new ROI
-#labeled_crack2 = cv2.imread('C:/Users/oezkan/HasanCan/AnnotatedImages_255crack/0000006604_bad_.tif',0)
-#img_raw2 = cv2.imread('C:/Users/oezkan/HasanCan/RawImages/0000006604_bad_.tif',0)
-maskRoi = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000331736_BusLabel.tif',0) 
+labeled_crack = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000689998_CrackLabel.tif')
+labeled_crack2 = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000331736_CrackLabel.tif')
+labeled_crack3 = cv2.imread('C:/Users/oezkan/HasanCan/AnnotatedImages_255crack/0000006604_bad_.tif')
+
+maskRoi = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/originalImages/0000689998_BusLabel.tif',0) 
+
+
+_,maskRoi = cv2.threshold(maskRoi,253,255,cv2.THRESH_BINARY)
 
 
 
-_, labeled_crack = cv2.threshold(labeled_crack[:,:,2],127,255,cv2.THRESH_BINARY)
+_, labeled_crack = cv2.threshold(labeled_crack3[:,:,2],127,255,cv2.THRESH_BINARY)
+plt.imshow(labeled_crack,'gray'),plt.show()
 kernel_label = np.ones((2,2),np.uint8)
 labeled_crack = cv2.dilate(labeled_crack,kernel_label,iterations =1)
 
 # apply fft for grid fingers
-img_fft = fft(maskRoi, mask_fft)
+img_fft = fft(img_raw3, mask_fft)
 
 # apply histogram equalization
 img_Eq = cv2.equalizeHist(img_fft)
 
-#list of parameters for filters
-param_bl = [[5,9],[25,50]]
-param_gf = [[2,3,4,5,6,7],[0.1,0.2,0.3,0.4]]
-param_ad = [[3,5,10,15,20],[(0.5,0.5),(1,1),(2,2),(5,5),(10,10)]]
+img_roi=roi(img_Eq)
 
-param_scale = [(0.5,0.6),(1.0,1.1),(1.5,1.6),(2.0,2.1),(2.5,2.6),(3.0,3.6),(3.5,3.6),(4.0,4.1)]
 
-wave_class_result = ""
-#apply the filters
+img_filtered = cv2.bilateralFilter(img_Eq,9,75,75)
 
-#img_filtered2 = ad(img_Eq, niter=param_ad[0][0],step=param_ad[1][0], kappa=50,gamma=0.10, option=1)
+''' param_scale i arttirdim
+'''
+param_scale = [(1.5,1.6),(2.0,2.1),(2.5,2.6),(3.0,3.6),(3.5,3.6),(4.0,4.1),(4.5,4.6),(5.0,5.1)]
 
-#plt.imshow(img_filtered2,'gray')
-#plt.show()
+v = [[],[],[],[],[],[],[],[]]
 
-for i in range (0,4,1):
-    if(i==0):
-        #Wavelet
-        def mad(arr):
-            """ Median Absolute Deviation: a "Robust" version of standard deviation.
-        Indices variabililty of the sample. 
-        """
-            arr = np.ma.array(arr).compressed()
-            med = np.median(arr)
-            return np.median(np.abs(arr - med))
-        img_Eq /=255
-        level = 2
-        wavelet = 'haar'
-        #decompose to 2nd level coefficients
-        coeffs=  pywt.wavedec2(img_Eq, wavelet=wavelet,level=level)
+for k in range(len(param_scale)):
+    v[k] = frangi(img_filtered,scale_range=param_scale[k],scale_step=1,beta1=0.5,beta2= 0.05)
+    v[k] = img_as_ubyte(v[k])
+
+min_img = np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(v[6],v[7]),v[5]),v[4]),v[3]),v[2]),v[1]),v[0])*img_roi
+max_img  = np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(v[6],v[7]),v[5]),v[4]),v[3]),v[2]),v[1]),v[0])
+#_, min_img = cv2.threshold(min_img,15,255,cv2.THRESH_BINARY)
+
+img_fr = frangi(img_filtered,scale_range=(2,2.1),scale_step=0.5,beta1=0.5,beta2= 0.05)*img_roi
+_,img_fr_thres = cv2.threshold(img_fr,5,255,cv2.THRESH_BINARY)
+
+img_fr = img_as_ubyte(img_fr)
+
+#img_fr.astype(np.float32)
+_, img_thresh = cv2.threshold(min_img,20,255,cv2.THRESH_BINARY)
+     
+    # y-axes
+kernel_y = np.ones((10,1),np.uint8)
+img_morph1 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_y)
+     
+    # x-axes
+kernel_x = np.ones((1,10),np.uint8)
+img_morph2 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_x)
+  
+img_morph = img_morph1 + img_morph2
     
-
-        #calculate the threshold
-        sigma = mad(coeffs[-level])
-        threshold = sigma*np.sqrt( 2*np.log(img_Eq.size/2)) #this is soft thresholding
-        #threshold = 50
-        newCoeffs = map (lambda x: pywt.threshold(x,threshold,mode='hard'),coeffs)
-
-        #reconstruction
-        recon_img= pywt.waverec2(coeffs, wavelet=wavelet)
-        v = [[],[],[],[],[],[],[],[]]
-        # normalization to convert uint8
-        img_filtered = cv2.normalize(recon_img, 0, 255, cv2.NORM_MINMAX)
-        img_filtered *=255
-        #apply frangi for different scales
-        for k in range(len(param_scale)):
-            v[k] = frangi(img_filtered,scale_range=param_scale[k],scale_step=1,beta1=0.5,beta2= 0.05,  black_ridges=True)
-            v[k] = img_as_ubyte(v[k])
-
-        min_img = np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(v[6],v[7]),v[5]),v[4]),v[3]),v[2]),v[1]),v[0])
-                    
-        #check f! score of all possibilities
-        new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),min_img.reshape((min_img.shape[0]*min_img.shape[1]))))
-        wave_class_result = wave_class_result+new_result
-        
-        #save the data
-        with open('wave_classification_results.txt','w') as output:
-            output.write(wave_class_result)
-    if(i == 1):
-        #Anisotropic
-        img_filtered = ad(img_Eq, niter=30,step= (19.,19.), kappa=50,gamma=0.25, option=1)
-    if(i == 2):
-        #GUIDED
-        img_filtered = cv2.bilateralFilter(img_Eq,9,75,75)
-    if (i == 3):
-        #Wavelet - !!!!!!
-        img_filtered = cv2.bilateralFilter(img_Eq,9,75,75) 
-
-
-
-
-#with open('out2.txt','w') as output:
- #   output.write(classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),img_fr2.reshape((img_fr2.shape[0]*img_fr2.shape[1]))))
-"""
-#list of parameters for filters
-param_bl = [[5,9],[75,100]]
-param_gf = [[2,3,4,5,6,7],[0.1,0.2,0.3,0.4]]
-param_ad = [[3,5,10,15,20],[0.5,1,2,5,10]]
-
-param_scale = [(0.5,0.6),(1.0,1.1)]
-
-
-
-#apply the filters
-
-
-
-img_frangi = [[],[]]
-for i in range(len(param_bl[0])):
-    for j in range(len(param_bl[1])):
-        #Bilateral
-        img_filtered = cv2.bilateralFilter(img_Eq,param_bl[0][i],param_bl[1][j],param_bl[1][j])
-                
-        #apply frangi for different scales
-        for k in range(len(param_scale)):
-            img_frangi[k] = frangi(img_filtered,scale_range=param_scale[k],scale_step=1,beta1=0.5,beta2= 0.05,  black_ridges=True)
-                    
-        min_img = np.minimum(img_frangi[0],img_frangi[1])
-                    
-        #check f! score of all possibilities
-        print(classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),min_img.reshape((min_img.shape[0]*min_img.shape[1]))))
-
-        #save the data
-        with open('out.txt','w') as output:
-            output.write(classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),min_img.reshape((min_img.shape[0]*min_img.shape[1]))))
-
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111
-#19.02  after meeting Daniel
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-# TODO
-# MASK the image (BUSBARS CANCELING)
-# FFT of the image
-# Equalize Hist
-
-# load labeled image to compare with
-
-#list_of_parameters: 
-# wavelet:
-# bilateral: k= (5,5) to (15x15) stepsize +2 | sigma_p, 25-150 (+25) | simga_g = 25-150 (+25)
-# guided:    r= 2 - 7 to  stepsize +1 | epsilon (+0.1 - 0.4) (stepsize 0.1)
-# anistropic 
-
-# frangi
-"""
-"""
-for i in range (0,4,1):
-    if (i == 0):
-        #Wavelet - !!!!!!
-        img_filtered = cv2.bilateralFilter(img_Eq,9,75,75)
-    if(i == 1):
-        #TODO Bilateral
-        img_filtered = cv2.bilateralFilter(img_Eq,9,75,75) # I can also apply different filters
-    if(i == 2):
-        #Anisotropic
-        img_filtered = ad(img_Eq, niter=30,step= (19.,19.), kappa=50,gamma=0.25, option=1)
-    if(i == 3):
-        #GUIDED
-        img_filtered = cv2.bilateralFilter(img_Eq,9,75,75)
+_,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
-    # change also parameters
-    img_fr_1 = frangi(img_filtered,scale_range=3,scale_step=0.5,beta1=0.5,beta2= 0.01,  black_ridges=True)
-    img_fr_2 = frangi(img_filtered,scale_range=4,scale_step=0.5,beta1=0.5,beta2= 0.01,  black_ridges=True)
-    img_fr1 = frangi(img_filtered,scale_range=(0.1,0.2),scale_step=1,beta1=0.5,beta2= 0.001,  black_ridges=True)*labeled_crack
-    img_fr2 = frangi(img_filtered,scale_range=(1,1.1),scale_step=1,beta1=0.5,beta2= 0.001,  black_ridges=True)
-    min_img = np.minimum(img_fr1,img_fr2)
-   """ 
+defects = []
+for i in range(len(contours)):
+    if(cv2.contourArea(contours[i]) > 200):
+        defects.append(contours[i])
+     
+defectImage = np.zeros((img_thresh.shape))
+cv2.drawContours(defectImage, defects, -1, 1, -1)
+defectImage = img_as_ubyte(defectImage)
+
+print classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1])))
+
+
+plt.subplot(2,4,1),plt.imshow(labeled_crack3,'gray'),plt.title('labeled')
+plt.subplot(2,4,2),plt.imshow(min_img,'gray'),plt.title('min_img')
+plt.subplot(2,4,3),plt.imshow(defectImage,'gray'),plt.title('defectImage')
+plt.subplot(2,4,4),plt.imshow(img_fr,'gray'),plt.title('img_fr')
+
+
+plt.show()
+
