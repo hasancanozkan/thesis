@@ -89,7 +89,7 @@ def hessian_matrix_eigvals(H_elems, Hxy=None, Hyy=None, Hxx=None):
     return eigvals
 
 
-def hessian_matrix(image, sigma=1, mode='constant', cval=0, order=None):
+def hessian_matrix(image, sigma=(1,1), mode='constant', cval=0, order=None):
     """Compute Hessian matrix.
     The Hessian matrix is defined as::
         H = [Hrr Hrc]
@@ -137,7 +137,7 @@ def hessian_matrix(image, sigma=1, mode='constant', cval=0, order=None):
 
     image = img_as_float(image)
 
-    gaussian_filtered = ndi.gaussian_filter(image, sigma=sigma,
+    gaussian_filtered = ndi.gaussian_filter(image, sigma=(sigma),
                                             mode=mode, cval=cval)
 
     if order is None:
@@ -163,7 +163,7 @@ def hessian_matrix(image, sigma=1, mode='constant', cval=0, order=None):
 
     return H_elems
 
-def _frangi_hessian_common_filter(image, scale_range, scale_step,
+def _frangi_hessian_common_filter(image, sigma_x, sigma_y,
                                   beta1, beta2):
     """This is an intermediate function for Frangi and Hessian filters.
     Shares the common code for Frangi and Hessian functions.
@@ -187,42 +187,40 @@ def _frangi_hessian_common_filter(image, scale_range, scale_step,
         List of pre-filtered images.
     """
 
-    sigmas = np.arange(scale_range[0], scale_range[1], scale_step)
-    if np.any(np.asarray(sigmas) < 0.0):
+    if np.any(np.asarray(sigma_x or sigma_y) < 0.0):
         raise ValueError("Sigma values less than zero are not valid")
 
     beta1 = 2 * beta1 ** 2
     beta2 = 2 * beta2 ** 2
 
-    filtered_array = np.zeros(sigmas.shape + image.shape)
-    lambdas_array = np.zeros(sigmas.shape + image.shape)
+    filtered_array = np.zeros(image.shape)
+    lambdas_array = np.zeros(image.shape)
 
     # Filtering for all sigmas
-    for i, sigma in enumerate(sigmas):
-        # Make 2D hessian
-        D = hessian_matrix(image, sigma, order='rc')
+    # Make 2D hessian
+    D = hessian_matrix(image, (sigma_x,sigma_y), order='rc')
 
-        # Correct for scale
-        D = np.array(D) * (sigma ** 2)
+    # Correct for scale
+    D = np.array(D) * (sigma_x * sigma_y)
 
-        # Calculate (abs sorted) eigenvalues and vectors
-        lambda1, lambda2 = hessian_matrix_eigvals(D)
+    # Calculate (abs sorted) eigenvalues and vectors
+    lambda1, lambda2 = hessian_matrix_eigvals(D)
 
-        # Compute some similarity measures
-        lambda1[lambda1 == 0] = 1e-10
-        rb = (lambda2 / lambda1) ** 2
-        s2 = lambda1 ** 2 + lambda2 ** 2
+    # Compute some similarity measures
+    lambda1[lambda1 == 0] = 1e-10
+    rb = (lambda2 / lambda1) ** 2
+    s2 = lambda1 ** 2 + lambda2 ** 2
 
-        # Compute the output image
-        filtered = np.exp(-rb / beta1) * (np.ones(np.shape(image)) -
+    # Compute the output image
+    filtered = np.exp(-rb / beta1) * (np.ones(np.shape(image)) -
                                           np.exp(-s2 / beta2))
 
-        # Store the results in 3D matrices
-        filtered_array[i] = filtered
-        lambdas_array[i] = lambda1
+    # Store the results in 3D matrices
+    filtered_array = filtered
+    lambdas_array = lambda1
     return filtered_array, lambdas_array
 
-def frangi(image, scale_range=(1, 10), scale_step=2, beta1=0.5, beta2=15,
+def frangi(image, sigma_x=1, sigma_y=1, beta1=0.5, beta2=0.05,
            black_ridges=True):
     """Filter an image with the Frangi filter.
     This filter can be used to detect continuous edges, e.g. vessels,
@@ -264,7 +262,7 @@ def frangi(image, scale_range=(1, 10), scale_step=2, beta1=0.5, beta2=15,
     .. [3] http://mplab.ucsd.edu/tutorials/gabor.pdf.
     """
     filtered, lambdas = _frangi_hessian_common_filter(image,
-                                                      scale_range, scale_step,
+                                                      sigma_x, sigma_y,
                                                       beta1, beta2)
     if black_ridges:
         filtered[lambdas < 0] = 0
@@ -273,4 +271,4 @@ def frangi(image, scale_range=(1, 10), scale_step=2, beta1=0.5, beta2=15,
 
     # Return for every pixel the value of the scale(sigma) with the maximum
     # output pixel value
-    return np.max(filtered, axis=0)
+    return filtered
