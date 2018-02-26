@@ -3,7 +3,7 @@ Created on Jan 23, 2018
 
 @author: HasanCan
 '''
-from adaptedFrangi import frangi
+from skimage.filters import frangi 
 from skimage import img_as_ubyte
 import cv2
 from matplotlib import pyplot as plt
