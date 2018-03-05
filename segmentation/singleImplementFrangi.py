@@ -19,23 +19,22 @@ from __builtin__ import str
 import glob
 
 
-img_raw1 = cv2.imread('C:/Users/oezkan/HasanCan/RawImages/0000007361_bad_.tif',0)
-labeled_crack1 = cv2.imread('C:/Users/oezkan/HasanCan/AnnotatedImages_255crack/0000007361_bad_.tif',0)
-
 #mask of fourier
 mask_fft = cv2.imread('C:/Users/oezkan/eclipse-workspace/thesis/filters/ModQ_EL_Poly-Bereket3.tif',0)
 
 
-image_list=[img_raw1]
-label_list=[labeled_crack1]
+image_list=[]
+label_list=[]
 
-def mad(arr):
-                """ Median Absolute Deviation: a "Robust" version of standard deviation.
-            Indices variabililty of the sample. 
-            """
-                arr = np.ma.array(arr).compressed()
-                med = np.median(arr)
-                return np.median(np.abs(arr - med))    
+for filename in glob.glob('C:/Users/oezkan/HasanCan/AnnotatedImages_255crack/*.tif'):
+    img= cv2.imread(filename,0)
+    label_list.append(img)
+    
+for filename in glob.glob('C:/Users/oezkan/HasanCan/RawImages/*.tif'):
+    img= cv2.imread(filename,0)
+    image_list.append(img)
+
+    
 start_time1 = time.time()
     
 for im in range(len(image_list)):    
@@ -47,26 +46,56 @@ for im in range(len(image_list)):
     kernel_label = np.ones((3,3),np.uint8)   
     labeled_crack = cv2.dilate(labeled_crack,kernel_label,iterations =1)
     
+    #plt.imshow(labeled_crack,'gray'),plt.title('label')
+    #plt.show()
+    
+    #apply mask for busbars and ROI, for now artificially drawn
+    # !!! it can not work as I do now !!!! I have to change convolve it with mask
+    
+    
+    '''be sure that image is either img_raw or white labelede maskRoi
+    '''
+    # apply fft for grid fingers
     img_fft = fft(image_list[im], mask_fft) 
     
+    # apply histogram equalization
     img_Eq = cv2.equalizeHist(img_fft)
     
+    '''this part is my own roi, which is bad with star cracks
+    then multiply roi with tghe result of frangi
+    '''
     img_roi=roi(img_Eq)
+    
+    #list of parameters for filters
+    #param_bl = [[9,11],[100,125,150]]#changed
+    #param_gf = [[2,4],[0.2,0.4]]
+    #param_ad = [[10,15],[(0.5,0.5),(1.,1.)]]#changed
+    
     #sigma x-y
-    param_x = [1.0]#changed
-    param_y = [1.0]#changed
+    param_x = [1.0,1.5,2.0]#changed
+    param_y = [1.0,1.5,2.0]#changed
     #setting constants
-    param_beta1= [0.2]
+    param_beta1= [0.2,0.5]
     param_beta2 = [0.125]
     
+    #bl_class_result = ""
+    #ad_class_result = ""
+    #gf_class_result = ""
+    wave_class_result = "" 
     
     #apply the filters
     for index in range (0,4,1):
-        
+
         if (index == 3):
             #Wavelet
-            
-            #img_fft /=255
+            def mad(arr):
+                """ Median Absolute Deviation: a "Robust" version of standard deviation.
+            Indices variabililty of the sample. 
+            """
+                arr = np.ma.array(arr).compressed()
+                med = np.median(arr)
+                return np.median(np.abs(arr - med))
+            #img_Eq /=255 # I realized that ruins the image
             level = 2
             wavelet = 'haar'
             #decompose to 2nd level coefficients
@@ -74,26 +103,19 @@ for im in range(len(image_list)):
             
             #calculate the threshold
             sigma = mad(coeffs[-level])
-            threshold = sigma*np.sqrt( 2*np.log(img_fft.size/2)) #this is soft thresholding
-            print threshold
-            #threshold = 50
-            newCoeffs = map (lambda x: pywt.threshold(x,threshold*2,mode='hard'),coeffs)
+            threshold = sigma*np.sqrt( 2*np.log(img_Eq.size/2))
             
+            # thereshold level increased
+            newCoeffs = map (lambda x: pywt.threshold(x,threshold*2,mode='hard'),coeffs)
+    
             #reconstruction
             recon_img= pywt.waverec2(coeffs, wavelet=wavelet)
-            plt.imshow(recon_img,'gray'),plt.title('img_recon')
-            plt.show()
+            
             # normalization to convert uint8
             img_filtered = cv2.normalize(recon_img, 0, 255, cv2.NORM_MINMAX)
-            img_filtered = recon_img*255
-            plt.imshow(img_filtered,'gray'),plt.title('img filtered')
-            plt.show()
+            img_filtered *=255
             
-            #print img_filtered.shape
             
-            #img_filtered = cv2.cvtColor(img_filtered,cv2.COLOR_BGR2GRAY)
-            
-
             v = [[],[]]
             #apply frangi for different scales
             for k in range(len(param_x)):
@@ -104,8 +126,7 @@ for im in range(len(image_list)):
                                         v[z] = img_as_ubyte(v[z])
     
                                     min_img = v[0]*img_roi
-                                    plt.imshow(min_img,'gray'),plt.title('img min_img')
-                                    plt.show()
+                                    
                 
                                     ''' this part of the code applies old algorithm to get rid of unwanted shapes
                                     may be I can delete this part later
@@ -142,10 +163,9 @@ for im in range(len(image_list)):
                                     defectImage should be removed from classification result
                                     '''
                                     #check f! score of all possibilities
-                                    print classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1])))
+                                    new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
+                                    wave_class_result =  wave_class_result+"wave_"+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
                                     #save the data
-                                    plt.subplot(2,2,1),plt.imshow(recon_img,'gray'),plt.title('recon_img')
-                                    plt.subplot(2,2,2),plt.imshow(img_filtered,'gray'),plt.title('img_filtered')
-                                    plt.subplot(2,2,3),plt.imshow(min_img,'gray'),plt.title('min_img')
-                                    plt.subplot(2,2,4),plt.imshow(defectImage,'gray'),plt.title('defect')
-                                    plt.show()
+                                    with open(str(im)+'_wave_classification_results.txt','w') as output:
+                                        output.write(wave_class_result)
+print(time.time() - start_time1)
