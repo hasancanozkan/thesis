@@ -34,7 +34,15 @@ for filename in glob.glob('C:/Users/oezkan/HasanCan/RawImages/*.tif'):
     img= cv2.imread(filename,0)
     image_list.append(img)
 
-    
+
+#Wavelet
+def mad(arr):
+    """ Median Absolute Deviation: a "Robust" version of standard deviation.
+Indices variabililty of the sample. 
+"""
+    arr = np.ma.array(arr).compressed()
+    med = np.median(arr)
+    return np.median(np.abs(arr - med))
 start_time1 = time.time()
     
 for im in range(len(image_list)):    
@@ -87,69 +95,72 @@ for im in range(len(image_list)):
     for index in range (0,4,1):
         
         if(index == 0):
-            v = [[],[]]
             for i in range(len(param_bl[0])):
                 for j in range(len(param_bl[1])):
                     #Bilateral
                     img_filtered = cv2.bilateralFilter(img_Eq,param_bl[0][i],param_bl[1][j],param_bl[1][j])
                    
                     #apply frangi for different scales
-                    for k in range(len(param_x)):
-                            for l in range(len(param_y)):
-                                for t in range(len(param_beta1)):
-                                    for z in range(len(param_beta2)):
-                                        v[z] = frangi(img_filtered,sigma_x = param_x[k],sigma_y = param_y[l],beta1=param_beta1[t],beta2= param_beta2[z],  black_ridges=True)
-                                        v[z] = img_as_ubyte(v[z])
-    
-                                    min_img = v[0]*img_roi
-                                                
-                                    ''' this part of the code applies old algorithm to get rid of unwanted shapes
-                                    may be I can delete this part later
-                                    '''
-                                    
-                                    #img_fr.astype(np.float32)
-                                    _, img_thresh = cv2.threshold(min_img,3,255,cv2.THRESH_BINARY)
-                                    # y-axes
-                                    kernel_y = np.ones((8,1),np.uint8)
-                                    img_morph1 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_y)
-         
-                                    # x-axes
-                                    kernel_x = np.ones((1,8),np.uint8)
-                                    img_morph2 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_x)
-                                        
-                                    img_morph = img_morph1 + img_morph2
-                                    #plt.imshow(img_morph,'gray'),plt.title('morph')
-                                    #plt.show()
-                                    _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        
-                                    defects = []
+                    for t in range(len(param_beta1)):
+                        for z in range(len(param_beta2)):
+                            v = []
+                            for k in range(len(param_x)):
+                                for l in range(len(param_y)):
+                                        v.append(img_as_ubyte(frangi(img_filtered,sigma_x = param_x[k],sigma_y = param_y[l],beta1=param_beta1[t],beta2= param_beta2[z],  black_ridges=True))) 
+                                         
+                                
+
+                            img_fr = v[0]
+                            for sigma_index in range(len(v)-1):
+                                img_fr = np.minimum(img_fr,v[sigma_index+1])
+                            img_fr = img_fr*img_roi                                                
+                            ''' this part of the code applies old algorithm to get rid of unwanted shapes
+                            may be I can delete this part later
+                            '''
+                            
+                            #img_fr.astype(np.float32)
+                            _, img_thresh = cv2.threshold(img_fr,3,255,cv2.THRESH_BINARY)
+                            # y-axes
+                            kernel_y = np.ones((8,1),np.uint8)
+                            img_morph1 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_y)
+ 
+                            # x-axes
+                            kernel_x = np.ones((1,8),np.uint8)
+                            img_morph2 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_x)
+                                
+                            img_morph = img_morph1 + img_morph2
+                            #plt.imshow(img_morph,'gray'),plt.title('morph')
+                            #plt.show()
+                            _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+                            defects = []
+                            defectImage = np.zeros((img_thresh.shape))
+
+                            for index in range(len(contours)):
+                                if(cv2.contourArea(contours[index]) > 200):
+                                    defects.append(contours[index])
+ 
                                     defectImage = np.zeros((img_thresh.shape))
-    
-                                    for index in range(len(contours)):
-                                        if(cv2.contourArea(contours[index]) > 200):
-                                            defects.append(contours[index])
-         
-                                            defectImage = np.zeros((img_thresh.shape))
-    
-                                            cv2.drawContours(defectImage, defects, -1, 1, -1)
-                                            defectImage = img_as_ubyte(defectImage)
-                                    #plt.imshow(defectImage,'gray'),plt.title('defect')
-                                    #plt.show()
-                                                                            
-                                    '''if you dont apply upper part
-                                    defectImage should be removed from classification result
-                                    ''' 
-                                    
-                                    #check f! score of all possibilities
-                                    new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
-                                    bl_class_result = bl_class_result+"bl_"+str(param_bl[0][i])+"_"+str(param_bl[1][j])+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
-                                    #save the data
-                                    with open(str(im)+'_bl_classification_results.txt','w') as output:
-                                        output.write(bl_class_result)
-                    
+
+                                    cv2.drawContours(defectImage, defects, -1, 1, -1)
+                                    defectImage = img_as_ubyte(defectImage)
+                            #plt.imshow(defectImage,'gray'),plt.title('defect')
+                            #plt.show()
+                                                                    
+                            '''if you dont apply upper part
+                            defectImage should be removed from classification result
+                            ''' 
+                            
+                            #check f! score of all possibilities
+                            new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
+                            bl_class_result = bl_class_result+"bl_"+str(param_bl[0][i])+"_"+str(param_bl[1][j])+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            #save the data
+                            with open(str(im)+'_bl_classification_results.txt','w') as output:
+                                output.write(bl_class_result)
+            
         if(index == 1):
             #Anisotropic
-            v = [[],[]]
+
             for i in range(len(param_ad[0])):
                 for j in range(len(param_ad[1])):
                     #Anisotropic Diffusion
@@ -158,119 +169,125 @@ for im in range(len(image_list)):
                     
     
                     #apply frangi for different scales
-                    for k in range(len(param_x)):
-                            for l in range(len(param_y)):
-                                for t in range(len(param_beta1)):
-                                    for z in range(len(param_beta2)):
-                                        v[z] = frangi(img_filtered,sigma_x = param_x[k],sigma_y = param_y[l],beta1=param_beta1[t],beta2= param_beta2[z],  black_ridges=True)
-                                        v[z] = img_as_ubyte(v[z])
-    
-                                    min_img = v[0]*img_roi
-                                    
-                                    ''' this part of the code applies old algorithm to get rid of unwanted shapes
-                                    may be I can delete this part later
-                                    '''
-                                    
-                                    #img_fr.astype(np.float32)
-                                    _, img_thresh = cv2.threshold(min_img,3,255,cv2.THRESH_BINARY)
-                                    
-                                    # y-axes
-                                    kernel_y = np.ones((8,1),np.uint8)
-                                    img_morph1 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_y)
-         
-                                    # x-axes
-                                    kernel_x = np.ones((1,8),np.uint8)
-                                    img_morph2 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_x)
-                                        
-                                    img_morph = img_morph1 + img_morph2
-        
-                                    _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                                    defectImage = np.zeros((img_thresh.shape))
-    
-                                    defects = []
-                                    for index in range(len(contours)):
-                                        if(cv2.contourArea(contours[index]) > 200):
-                                            defects.append(contours[index])
-         
-                                            defectImage = np.zeros((img_thresh.shape))
-    
-                                            cv2.drawContours(defectImage, defects, -1, 1, -1)
-                                            defectImage = img_as_ubyte(defectImage)  
+                    for t in range(len(param_beta1)):
+                        for z in range(len(param_beta2)):
+                            v = []
+                            for k in range(len(param_x)):
+                                for l in range(len(param_y)):
+                                        v.append(img_as_ubyte(frangi(img_filtered,sigma_x = param_x[k],sigma_y = param_y[l],beta1=param_beta1[t],beta2= param_beta2[z],  black_ridges=True))) 
+                                       
                                 
-                                    
-                                    '''if you dont apply upper part
-                                    defectImage should be removed from classification result
-                                    '''                                        
+
+                            img_fr = v[0]
+                            for sigma_index in range(len(v)-1):
+                                img_fr = np.minimum(img_fr,v[sigma_index+1])
+                            img_fr = img_fr*img_roi                                                
+                            ''' this part of the code applies old algorithm to get rid of unwanted shapes
+                            may be I can delete this part later
+                            '''
                             
-                                    #check f! score of all possibilities
-                                    new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
-                                    ad_class_result =  ad_class_result+"ad_"+str(param_ad[0][i])+"_"+str(param_ad[1][j])+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
-                                    #save the data
-                                    with open(str(im)+'_ad_classification_results.txt','w') as output:
-                                        output.write(ad_class_result)
+                            #img_fr.astype(np.float32)
+                            _, img_thresh = cv2.threshold(img_fr,3,255,cv2.THRESH_BINARY)
+                            
+                            # y-axes
+                            kernel_y = np.ones((8,1),np.uint8)
+                            img_morph1 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_y)
+ 
+                            # x-axes
+                            kernel_x = np.ones((1,8),np.uint8)
+                            img_morph2 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_x)
+                                
+                            img_morph = img_morph1 + img_morph2
+
+                            _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                            defectImage = np.zeros((img_thresh.shape))
+
+                            defects = []
+                            for index in range(len(contours)):
+                                if(cv2.contourArea(contours[index]) > 200):
+                                    defects.append(contours[index])
+ 
+                                    defectImage = np.zeros((img_thresh.shape))
+
+                                    cv2.drawContours(defectImage, defects, -1, 1, -1)
+                                    defectImage = img_as_ubyte(defectImage)  
+                        
+                            
+                            '''if you dont apply upper part
+                            defectImage should be removed from classification result
+                            '''                                        
+                    
+                            #check f! score of all possibilities
+                            new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
+                            ad_class_result =  ad_class_result+"ad_"+str(param_ad[0][i])+"_"+str(param_ad[1][j])+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            #save the data
+                            with open(str(im)+'_ad_classification_results.txt','w') as output:
+                                output.write(ad_class_result)
                                         
         if(index == 2):
             #GUIDED
-            v = [[],[]]
             for i in range(len(param_gf[0])):
                 for j in range(len(param_gf[1])):
                     #Bilateral
                     img_filtered = guidedFilter(img_Eq, img_Eq, param_gf[0][i], param_gf[1][j]) 
                                   
                     #apply frangi for different scales
-                    for k in range(len(param_x)):
-                            for l in range(len(param_y)):
-                                for t in range(len(param_beta1)):
-                                    for z in range(len(param_beta2)):
-                                        v[z] = frangi(img_filtered,sigma_x = param_x[k],sigma_y = param_y[l],beta1=param_beta1[t],beta2= param_beta2[z],  black_ridges=True)
-                                        v[z] = img_as_ubyte(v[z])
-    
-                                    min_img = v[0]*img_roi
-                                    
-                                    ''' this part of the code applies old algorithm to get rid of unwanted shapes
-                                    may be I can delete this part later
-                                    '''
-                                    
-                                    #img_fr.astype(np.float32)
-                                    _, img_thresh = cv2.threshold(min_img,3,255,cv2.THRESH_BINARY)#changed!!!!!11111
-                                    
-                                    # y-axes
-                                    kernel_y = np.ones((8,1),np.uint8)
-                                    img_morph1 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_y)
-         
-                                    # x-axes
-                                    kernel_x = np.ones((1,8),np.uint8)
-                                    img_morph2 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_x)
-                                        
-                                    img_morph = img_morph1 + img_morph2
-        
-                                    _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        
-                                    defectImage = np.zeros((img_thresh.shape))
-        
-                                    defects = []
-                                    for index in range(len(contours)):
-                                        if(cv2.contourArea(contours[index]) > 200):
-                                            defects.append(contours[index])
-    
-                                            defectImage = np.zeros((img_thresh.shape))
-    
-                                            cv2.drawContours(defectImage, defects, -1, 1, -1)
-                                            defectImage = img_as_ubyte(defectImage)  
+                    for t in range(len(param_beta1)):
+                        for z in range(len(param_beta2)):
+                            v = []
+                            for k in range(len(param_x)):
+                                for l in range(len(param_y)):
+                                        v.append(img_as_ubyte(frangi(img_filtered,sigma_x = param_x[k],sigma_y = param_y[l],beta1=param_beta1[t],beta2= param_beta2[z],  black_ridges=True))) 
+                                         
                                 
-                                    
-                                    '''if you dont apply upper part
-                                    defectImage should be removed from classification result
-                                    '''
-                                    
-                                    #check f! score of all possibilities
-                                    new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
-                                    gf_class_result = gf_class_result+"gf_"+str(param_gf[0][i])+"_"+str(param_gf[1][j])+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
-                                    #save the data
-                                    with open(str(im)+'_gf_classification_results.txt','w') as output:
-                                        output.write(gf_class_result)
+
+                            img_fr = v[0]
+                            for sigma_index in range(len(v)-1):
+                                img_fr = np.minimum(img_fr,v[sigma_index+1])
+                            img_fr = img_fr*img_roi                                                
+                            ''' this part of the code applies old algorithm to get rid of unwanted shapes
+                            may be I can delete this part later
+                            '''
+                            
+                            #img_fr.astype(np.float32)
+                            _, img_thresh = cv2.threshold(img_fr,3,255,cv2.THRESH_BINARY)
+                            
+                            # y-axes
+                            kernel_y = np.ones((8,1),np.uint8)
+                            img_morph1 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_y)
+ 
+                            # x-axes
+                            kernel_x = np.ones((1,8),np.uint8)
+                            img_morph2 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_x)
+                                
+                            img_morph = img_morph1 + img_morph2
+
+                            _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+                            defectImage = np.zeros((img_thresh.shape))
+
+                            defects = []
+                            for index in range(len(contours)):
+                                if(cv2.contourArea(contours[index]) > 200):
+                                    defects.append(contours[index])
+
+                                    defectImage = np.zeros((img_thresh.shape))
+
+                                    cv2.drawContours(defectImage, defects, -1, 1, -1)
+                                    defectImage = img_as_ubyte(defectImage)  
+                        
+                            
+                            '''if you dont apply upper part
+                            defectImage should be removed from classification result
+                            '''
+                            
+                            #check f! score of all possibilities
+                            new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
+                            gf_class_result = gf_class_result+"gf_"+str(param_gf[0][i])+"_"+str(param_gf[1][j])+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            #save the data
+                            with open(str(im)+'_gf_classification_results.txt','w') as output:
+                                output.write(gf_class_result)
         
-        for index in range (0,4,1):
         
         if (index == 3):
             #Wavelet
@@ -290,70 +307,70 @@ for im in range(len(image_list)):
             
             #reconstruction
             recon_img= pywt.waverec2(coeffs, wavelet=wavelet)
-            plt.imshow(recon_img,'gray'),plt.title('img_recon')
-            plt.show()
+           
             # normalization to convert uint8
             img_filtered = cv2.normalize(recon_img, 0, 255, cv2.NORM_MINMAX)
             img_filtered = recon_img*255
-            plt.imshow(img_filtered,'gray'),plt.title('img filtered')
-            plt.show()
+            
             
             #print img_filtered.shape
             
             #img_filtered = cv2.cvtColor(img_filtered,cv2.COLOR_BGR2GRAY)
             
 
-            v = [[],[]]
+            
             #apply frangi for different scales
-            for k in range(len(param_x)):
-                            for l in range(len(param_y)):
-                                for t in range(len(param_beta1)):
-                                    for z in range(len(param_beta2)):
-                                        v[z] = frangi(img_filtered,sigma_x = param_x[k],sigma_y = param_y[l],beta1=param_beta1[t],beta2= param_beta2[z],  black_ridges=True)
-                                        v[z] = img_as_ubyte(v[z])
-    
-                                    min_img = v[0]*img_roi
-                                    plt.imshow(min_img,'gray'),plt.title('img min_img')
-                                    plt.show()
-                
-                                    ''' this part of the code applies old algorithm to get rid of unwanted shapes
-                                    may be I can delete this part later
-                                    '''
-                                    
-                                    #img_fr.astype(np.float32)
-                                    _, img_thresh = cv2.threshold(min_img,3,255,cv2.THRESH_BINARY)
-                            
-                                    # y-axes
-                                    kernel_y = np.ones((8,1),np.uint8)
-                                    img_morph1 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_y)
-         
-                                    # x-axes
-                                    kernel_x = np.ones((1,8),np.uint8)
-                                    img_morph2 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_x)
+            for t in range(len(param_beta1)):
+                        for z in range(len(param_beta2)):
+                            v = []
+                            for k in range(len(param_x)):
+                                for l in range(len(param_y)):
+                                        v.append(img_as_ubyte(frangi(img_filtered,sigma_x = param_x[k],sigma_y = param_y[l],beta1=param_beta1[t],beta2= param_beta2[z],  black_ridges=True))) 
                                         
-                                    img_morph = img_morph1 + img_morph2
-        
-                                    _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                                
+
+                            img_fr = v[0]
+                            for sigma_index in range(len(v)-1):
+                                img_fr = np.minimum(img_fr,v[sigma_index+1])
+                            img_fr = img_fr*img_roi                                                
+                            ''' this part of the code applies old algorithm to get rid of unwanted shapes
+                            may be I can delete this part later
+                            '''
+                            
+                            #img_fr.astype(np.float32)
+                            _, img_thresh = cv2.threshold(img_fr,3,255,cv2.THRESH_BINARY)
+                    
+                            # y-axes
+                            kernel_y = np.ones((8,1),np.uint8)
+                            img_morph1 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_y)
+ 
+                            # x-axes
+                            kernel_x = np.ones((1,8),np.uint8)
+                            img_morph2 = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kernel_x)
+                                
+                            img_morph = img_morph1 + img_morph2
+
+                            _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                            defectImage = np.zeros((img_thresh.shape))
+
+                            defects = []
+                            for index in range(len(contours)):
+                                if(cv2.contourArea(contours[index]) > 100):
+                                    defects.append(contours[index])
+ 
                                     defectImage = np.zeros((img_thresh.shape))
-    
-                                    defects = []
-                                    for index in range(len(contours)):
-                                        if(cv2.contourArea(contours[index]) > 200):
-                                            defects.append(contours[index])
-         
-                                            defectImage = np.zeros((img_thresh.shape))
-    
-                                            cv2.drawContours(defectImage, defects, -1, 1, -1)
-                                            defectImage = img_as_ubyte(defectImage)
-                                    
-                                                                      
-                                    '''if you dont apply upper part
-                                    defectImage should be removed from classification result
-                                    '''
-                                    #check f! score of all possibilities
-                                    new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
-                                    wave_class_result =  wave_class_result+"wave_"+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
-                                    #save the data
-                                    with open(str(im)+'_wave_classification_results.txt','w') as output:
-                                        output.write(wave_class_result)
+
+                                    cv2.drawContours(defectImage, defects, -1, 1, -1)
+                                    defectImage = img_as_ubyte(defectImage)
+                            
+                                                              
+                            '''if you dont apply upper part
+                            defectImage should be removed from classification result
+                            '''
+                            #check f! score of all possibilities
+                            new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
+                            wave_class_result =  wave_class_result+"wave_"+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            #save the data
+                            with open(str(im)+'_wave_classification_results.txt','w') as output:
+                                output.write(wave_class_result)
 print(time.time() - start_time1)
