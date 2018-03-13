@@ -75,15 +75,15 @@ for im in range(len(image_list)):
     img_roi=roi(img_Eq)
     
     #list of parameters for filters
-    param_bl = [[9,11],[100,125,150]]#changed
+    param_bl = [[9,11],[100,150]]#changed
     param_gf = [[2,4],[0.2,0.4]]
     param_ad = [[10,15],[(0.5,0.5),(1.,1.)]]#changed
     
     #sigma x-y
-    param_x = [1.0,1.5,2.0]#changed
-    param_y = [1.0,1.5,2.0]#changed
+    param_x = [1.0,1.5,2.0,2.5]#changed
+    param_y = [1.0,1.5,2.0,2.5]#changed
     #setting constants
-    param_beta1= [0.2,0.5]
+    param_beta1= [0.5]
     param_beta2 = [0.125]
     
     bl_class_result = ""
@@ -153,7 +153,8 @@ for im in range(len(image_list)):
                             
                             #check f! score of all possibilities
                             new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
-                            bl_class_result = bl_class_result+"bl_"+str(param_bl[0][i])+"_"+str(param_bl[1][j])+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            bl_class_result = bl_class_result+"bl_"+str(param_bl[0][i])+"_"+str(param_bl[1][j])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            cv2.imwrite(str(im)+'bl_'+str(param_bl[0][i])+'_'+str(param_bl[1][j])+ '_beta1_' + str(param_beta1[t]) + '_beta2_' + str(param_beta2[z])+'.tif', defectImage)
                             #save the data
                             with open(str(im)+'_bl_classification_results.txt','w') as output:
                                 output.write(bl_class_result)
@@ -219,7 +220,9 @@ for im in range(len(image_list)):
                     
                             #check f! score of all possibilities
                             new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
-                            ad_class_result =  ad_class_result+"ad_"+str(param_ad[0][i])+"_"+str(param_ad[1][j])+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            ad_class_result =  ad_class_result+"ad_"+str(param_ad[0][i])+"_"+str(param_ad[1][j])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            cv2.imwrite(str(im)+'ad_'+str(param_ad[0][i])+'_'+str(param_ad[1][j])+ '_beta1_' + str(param_beta1[t]) + '_beta2_' + str(param_beta2[z])+'.tif', defectImage)
+
                             #save the data
                             with open(str(im)+'_ad_classification_results.txt','w') as output:
                                 output.write(ad_class_result)
@@ -283,7 +286,9 @@ for im in range(len(image_list)):
                             
                             #check f! score of all possibilities
                             new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
-                            gf_class_result = gf_class_result+"gf_"+str(param_gf[0][i])+"_"+str(param_gf[1][j])+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            gf_class_result = gf_class_result+"gf_"+str(param_gf[0][i])+"_"+str(param_gf[1][j])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            cv2.imwrite(str(im)+'gf_'+str(param_gf[0][i])+'_'+str(param_gf[1][j])+ '_beta1_' + str(param_beta1[t]) + '_beta2_' + str(param_beta2[z])+'.tif', defectImage)
+
                             #save the data
                             with open(str(im)+'_gf_classification_results.txt','w') as output:
                                 output.write(gf_class_result)
@@ -296,8 +301,8 @@ for im in range(len(image_list)):
             level = 2
             wavelet = 'haar'
             #decompose to 2nd level coefficients
-            coeffs =  pywt.wavedec2(img_Eq, wavelet=wavelet,level=level)
-            
+            [cA2,(cH2, cV2, cD2), (cH1, cV1, cD1)]  =  pywt.wavedec2(img_Eq, wavelet=wavelet,level=level)
+            coeffs = [cA2,(cH2, cV2, cD2)]
             #calculate the threshold
             sigma = mad(coeffs[-level])
             threshold = sigma*np.sqrt( 2*np.log(img_fft.size/2)) #this is soft thresholding
@@ -312,6 +317,7 @@ for im in range(len(image_list)):
             img_filtered = cv2.normalize(recon_img, 0, 255, cv2.NORM_MINMAX)
             img_filtered = recon_img*255
             
+            #this is only downsampling for filtering
             
             #print img_filtered.shape
             
@@ -355,7 +361,7 @@ for im in range(len(image_list)):
 
                             defects = []
                             for index in range(len(contours)):
-                                if(cv2.contourArea(contours[index]) > 100):
+                                if(cv2.contourArea(contours[index]) > 200):
                                     defects.append(contours[index])
  
                                     defectImage = np.zeros((img_thresh.shape))
@@ -367,10 +373,16 @@ for im in range(len(image_list)):
                             '''if you dont apply upper part
                             defectImage should be removed from classification result
                             '''
+                            #to have classification result downscale
+                            labeled_crack = cv2.pyrDown(labeled_crack,(512,512))        
+                            _,labeled_crack = cv2.threshold(labeled_crack,3,255,cv2.THRESH_BINARY)     
+                            #plt.imshow(labeled_crack,'gray'),plt.show()   
                             #check f! score of all possibilities
                             new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
-                            wave_class_result =  wave_class_result+"wave_"+ "_x_"   +str(param_x[k])+"_y_"+str(param_y[l])+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            wave_class_result =  wave_class_result+"wave_"+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            cv2.imwrite(str(im)+'waveApprox'+ '_beta1_' + str(param_beta1[t]) + '_beta2_' + str(param_beta2[z])+'.tif', defectImage)
+                            
                             #save the data
-                            with open(str(im)+'_wave_classification_results.txt','w') as output:
+                            with open(str(im)+'_waveApprox_classification_results.txt','w') as output:
                                 output.write(wave_class_result)
 print(time.time() - start_time1)
