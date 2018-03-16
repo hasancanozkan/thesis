@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 import time
 import numpy as np
 from sklearn.metrics import classification_report
-from ROI_function import createROI as roi
+from newROI import createROI as roi
 from fftFunction import fft
 from AnisotropicDiffusionSourceCode import anisodiff as ad
 from cv2.ximgproc import guidedFilter
@@ -293,10 +293,13 @@ for im in range(len(image_list)):
                             with open(str(im)+'_gf_classification_results.txt','w') as output:
                                 output.write(gf_class_result)
         
-        
+        """ 
+        #the rest of the code works but I wont use it here anymore,
+        #if I need it i can run it somewhere else
         if (index == 3):
-            #Wavelet
             
+            #Wavelet
+            img_roi=cv2.pyrDown(img_roi,(512,512))
             #img_fft /=255
             level = 2
             wavelet = 'haar'
@@ -304,27 +307,19 @@ for im in range(len(image_list)):
             [cA2,(cH2, cV2, cD2), (cH1, cV1, cD1)]  =  pywt.wavedec2(img_Eq, wavelet=wavelet,level=level)
             coeffs = [cA2,(cH2, cV2, cD2)]
             #calculate the threshold
-            sigma = mad(coeffs[-level])
-            threshold = sigma*np.sqrt( 2*np.log(img_fft.size/2)) #this is soft thresholding
-            print threshold
-            #threshold = 50
-            newCoeffs = map (lambda x: pywt.threshold(x,threshold*2,mode='hard'),coeffs)
+            #sigma = mad(coeffs[-level])
+            #threshold = sigma*np.sqrt( 2*np.log(img_Eq.size/2)) #this is soft thresholding
+            #print threshold
+            #threshold = 30
+            #newCoeffs = map (lambda x: pywt.threshold(x,threshold*2,mode='hard'),coeffs)
             
             #reconstruction
             recon_img= pywt.waverec2(coeffs, wavelet=wavelet)
            
             # normalization to convert uint8
             img_filtered = cv2.normalize(recon_img, 0, 255, cv2.NORM_MINMAX)
-            img_filtered = recon_img*255
-            
-            #this is only downsampling for filtering
-            
-            #print img_filtered.shape
-            
-            #img_filtered = cv2.cvtColor(img_filtered,cv2.COLOR_BGR2GRAY)
-            
-
-            
+            #img_filtered = recon_img*255 # !!!!!!!!!!!bu hatali 
+             
             #apply frangi for different scales
             for t in range(len(param_beta1)):
                         for z in range(len(param_beta2)):
@@ -361,7 +356,7 @@ for im in range(len(image_list)):
 
                             defects = []
                             for index in range(len(contours)):
-                                if(cv2.contourArea(contours[index]) > 200):
+                                if(cv2.contourArea(contours[index]) > 20):
                                     defects.append(contours[index])
  
                                     defectImage = np.zeros((img_thresh.shape))
@@ -374,15 +369,15 @@ for im in range(len(image_list)):
                             defectImage should be removed from classification result
                             '''
                             #to have classification result downscale
-                            labeled_crack = cv2.pyrDown(labeled_crack,(512,512))        
-                            _,labeled_crack = cv2.threshold(labeled_crack,3,255,cv2.THRESH_BINARY)     
+                            #labeled_crack = cv2.pyrDown(labeled_crack,(512,512))        
+                            #_,labeled_crack = cv2.threshold(labeled_crack,3,255,cv2.THRESH_BINARY)     
                             #plt.imshow(labeled_crack,'gray'),plt.show()   
                             #check f! score of all possibilities
-                            new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
-                            wave_class_result =  wave_class_result+"wave_"+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
+                            #new_result = (classification_report(labeled_crack.reshape((labeled_crack.shape[0]*labeled_crack.shape[1])),defectImage.reshape((defectImage.shape[0]*defectImage.shape[1]))))
+                            #wave_class_result =  wave_class_result+"wave_"+ "_beta1_" + str(param_beta1[t]) + "_beta2_" + str(param_beta2[z]) +"\n" +new_result
                             cv2.imwrite(str(im)+'waveApprox'+ '_beta1_' + str(param_beta1[t]) + '_beta2_' + str(param_beta2[z])+'.tif', defectImage)
                             
                             #save the data
-                            with open(str(im)+'_waveApprox_classification_results.txt','w') as output:
-                                output.write(wave_class_result)
+                            #with open(str(im)+'_waveApprox_classification_results.txt','w') as output:
+                                #output.write(wave_class_result)"""
 print(time.time() - start_time1)
