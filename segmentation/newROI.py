@@ -3,11 +3,9 @@ Created on 16.03.2018
 
 @author: oezkan
 '''
-from skimage import img_as_ubyte
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
-from fftFunction import fft
 
 def mainBorder(img_Eq):
     '''
@@ -43,7 +41,19 @@ def mainBorder(img_Eq):
     img_morph1 = cv2.morphologyEx(rect, cv2.MORPH_OPEN, kernel_y)
     
     img_morph = img_morph2 * img_morph1
-    return img_morph
+    
+    _,contours,_ = cv2.findContours(img_morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    main_border = np.zeros((img_morph.shape))
+    border = []
+    for index in range(len(contours)):
+                    if(cv2.contourArea(contours[index]) > 100000):
+                        border.append(contours[index])
+                        cv2.drawContours(main_border, border, -1, 1, -1)
+    epsilon = 0.1* cv2.arcLength(border[0],True)
+    approx = cv2.approxPolyDP(border[0],epsilon,True)                    
+    cv2.drawContours(main_border,approx,-1,1,-1)
+    
+    return main_border
 
 
 def createROI(img_Eq):
