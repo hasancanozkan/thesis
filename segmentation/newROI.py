@@ -18,8 +18,8 @@ def mainBorder(img_Eq):
     invertROI = cv2.bitwise_not(ROI)
     
     #setting rectangle kernels
-    rect_y = cv2.getStructuringElement(cv2.MORPH_RECT,(4,1000))
-    rect_x = cv2.getStructuringElement(cv2.MORPH_RECT,(1000,4))
+    rect_y = cv2.getStructuringElement(cv2.MORPH_RECT,(4,2000))
+    rect_x = cv2.getStructuringElement(cv2.MORPH_RECT,(2000,4))
     
     rect_opened_y = cv2.morphologyEx(invertROI,cv2.MORPH_OPEN,rect_y)
     rect_opened_y = cv2.bitwise_not(rect_opened_y)
@@ -52,6 +52,9 @@ def mainBorder(img_Eq):
     epsilon = 0.1* cv2.arcLength(border[0],True)
     approx = cv2.approxPolyDP(border[0],epsilon,True)                    
     cv2.drawContours(main_border,approx,-1,1,-1)
+    
+    kernel_ROI = np.ones((3,3),np.uint8)
+    main_border = cv2.erode(main_border,kernel_ROI,iterations = 1)
     
     return main_border
 
@@ -99,7 +102,7 @@ def createROIfromOriginal(img_fft):
     '''
     This function gets main border and 
     bus bars together.
-    It needs to be applied on an image which has histogram equalization!!!!!!!!!!!!
+    It needs to be applied on an image which has ONLY Fouries Trns !!!!!!!!!!!!
     '''
 
     threshold_value = np.min(img_fft)
