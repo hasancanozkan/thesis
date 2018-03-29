@@ -164,7 +164,7 @@ for im in range(len(image_list)):
             
             
             labeled_crack=cv2.pyrDown(labeled_crack,(512,512))
-            _, img_thresh_label = cv2.threshold(labeled_crack,5,255,cv2.THRESH_BINARY)
+            _, labeled_crack = cv2.threshold(labeled_crack,5,255,cv2.THRESH_BINARY)
             
             img_fr_roi = img_thresh*img_roi                                                
 
