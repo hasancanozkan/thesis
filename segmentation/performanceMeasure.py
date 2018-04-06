@@ -23,7 +23,7 @@ def perf_measure(truth, result, img_roi):
             for j in range(len(result)):
                 if truth[i][j]==255:
                     NCP +=1
-        print 'NCP: ' + str(NCP)
+        #print 'NCP: ' + str(NCP)
                 
         for i in range(len(result)): 
             for j in range(len(result)):
@@ -37,8 +37,8 @@ def perf_measure(truth, result, img_roi):
                     elif result[i][j]==0 and truth[i][j]!=result[i][j]:
                         FN += 1
                 TNP += 1
-        print 'TNP: ' + str(TNP)
-        print 'FP:' + str(FP)
+        #print 'TNP: ' + str(TNP)
+        #print 'FP:' + str(FP)
  
         sensitivity = (TP / (TP+FN))
         specificity = (TN / (TN+FP))
@@ -61,7 +61,7 @@ def perf_measure(truth, result, img_roi):
         sensitivity = specificity= (TP / (TP+FN))
         FPR = FNR = 1 - specificity
         onlyFP = FP / TNP 
-        print 'TNP: ' + str(TNP)
-        print 'FP:' + str(FP)
+        #print 'TNP: ' + str(TNP)
+        #print 'FP:' + str(FP)
 
     return( sensitivity, specificity , FPR, FNR, onlyFP)
