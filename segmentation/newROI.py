@@ -13,7 +13,7 @@ def mainBorder(img_Eq):
     It needs to be applied on an image which has histogram equalization!!!!!!!!!!!!
     '''
     threshold_value = np.min(img_Eq)
-    _,ROI = cv2.threshold(img_Eq,(threshold_value+60),255,cv2.THRESH_BINARY)
+    _,ROI = cv2.threshold(img_Eq,(threshold_value+65),255,cv2.THRESH_BINARY)
     invertROI = cv2.bitwise_not(ROI)
     
     #setting rectangle kernels
@@ -76,7 +76,7 @@ def busBars(img_Eq):
     rect_opened_y = cv2.morphologyEx(invertROI,cv2.MORPH_OPEN,rect_y)
     rect_opened_y = cv2.bitwise_not(rect_opened_y)
     
-    kernel_y = np.ones((1,10),np.uint8)
+    kernel_y = np.ones((1,12),np.uint8)
     rect_opened_y1 = cv2.erode(rect_opened_y,kernel_y,1)
     
     return rect_opened_y1
