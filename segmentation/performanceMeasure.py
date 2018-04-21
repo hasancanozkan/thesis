@@ -28,13 +28,13 @@ def perf_measure(truth, result, img_roi):
         for i in range(len(result)): 
             for j in range(len(result)):
                 if(img_roi[i][j] == 1):
-                    if truth[i][j]==result[i][j]==255:
+                    if truth[i][j]==255 and result[i][j]==1.0:
                         TP += 1
-                    elif result[i][j]==255 and truth[i][j]!=result[i][j]:
+                    elif result[i][j]==1.0 and truth[i][j]!=255:
                         FP += 1
-                    elif truth[i][j]==result[i][j]==0:
+                    elif truth[i][j]==0 and result[i][j]==0.0:
                         TN += 1
-                    elif result[i][j]==0 and truth[i][j]!=result[i][j]:
+                    elif result[i][j]==0 and truth[i][j]!=0.0:
                         FN += 1
                 TNP += 1
         #print 'TNP: ' + str(TNP)
@@ -52,10 +52,10 @@ def perf_measure(truth, result, img_roi):
             for j in range(len(result)):
                 if(img_roi[i][j] == 1):
                     TNP +=1
-                    if truth[i][j]==result[i][j]==0:
+                    if truth[i][j]==0 and result[i][j]==0.0:
                         TP += 1
                         FN += 1
-                    elif result[i][j]==255 and truth[i][j]!=result[i][j]:
+                    elif result[i][j]==1.0 and truth[i][j]==0:
                         FP += 1
                         FN += 1
         sensitivity = specificity= (TP / (TP+FN))
