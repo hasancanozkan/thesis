@@ -205,10 +205,6 @@ def _frangi_hessian_common_filter(image, sigma_x, sigma_y,
 
     # Calculate (abs sorted) eigenvalues and vectors
     lambda1, lambda2 = hessian_matrix_eigvals(D)
-    
-    #Daniel
-    #maxMag = np.sqrt(np.max(lambda1)**2 + np.max(lambda2)**2)
-    #beta2 = 2*(maxMag/4)**2
 
     # Compute some similarity measures
     lambda1[lambda1 == 0] = 1e-10

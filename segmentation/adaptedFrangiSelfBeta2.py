@@ -214,7 +214,7 @@ def _frangi_hessian_common_filter(image, sigma_x, sigma_y,
     maxMag = np.sqrt(np.max(lambda1)**2 + np.max(lambda2)**2)
     beta2 = 2*(maxMag/4)**2
     
-    print 'beta2:' + str(beta2)
+    #print 'beta2:' + str(beta2)
     # Compute some similarity measures
     lambda1[lambda1 == 0] = 1e-10
     rb = (lambda2 / lambda1) ** 2
