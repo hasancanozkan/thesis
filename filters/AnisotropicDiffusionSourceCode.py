@@ -3,7 +3,7 @@ import warnings
 import matplotlib.pyplot as plt
 import cv2
 
-def anisodiff(img,niter=1,kappa=50,gamma=0.1,step=(1.,1.),option=1,ploton=False):
+def anisodiff(img,niter=1,kappa=50,gamma=0.1,option=1,ploton=False):
     """
     Anisotropic diffusion.
 
@@ -15,7 +15,6 @@ def anisodiff(img,niter=1,kappa=50,gamma=0.1,step=(1.,1.),option=1,ploton=False)
             niter  - number of iterations
             kappa  - conduction coefficient 20-100 ?
             gamma  - max value of .25 for stability
-            step   - tuple, the distance between adjacent pixels in (y,x)
             option - 1 Perona Malik diffusion equation No 1
                      2 Perona Malik diffusion equation No 2
             ploton - if True, the image will be plotted on every iteration
@@ -100,11 +99,11 @@ def anisodiff(img,niter=1,kappa=50,gamma=0.1,step=(1.,1.),option=1,ploton=False)
 
         # conduction gradients (only need to compute one per dim!)
         if option == 1:
-            gS = np.exp(-(deltaS/kappa)**2.)/step[0]
-            gE = np.exp(-(deltaE/kappa)**2.)/step[1]
+            gS = np.exp(-(deltaS/kappa)**2.)
+            gE = np.exp(-(deltaE/kappa)**2.)
         elif option == 2:
-            gS = 1./(1.+(deltaS/kappa)**2.)/step[0]
-            gE = 1./(1.+(deltaE/kappa)**2.)/step[1]
+            gS = 1./(1.+(deltaS/kappa)**2.)
+            gE = 1./(1.+(deltaE/kappa)**2.)
 
         # update matrices
         E = gE*deltaE
