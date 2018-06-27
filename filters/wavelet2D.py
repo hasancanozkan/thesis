@@ -25,6 +25,7 @@ img_crack1 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000231_crack.
 img_crack2 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000000281_crack.tif",0)
 img_crack3 = cv2.imread("D://oezkan/Data/MASTERTHESIS_EL_start/0000001220_crack.tif",0)
 img_raw = cv2.imread('C:/Users/oezkan/HasanCan/RawImages/0000006214_bad_.tif',0)
+img_vessel = cv2.imread('C:/Users/oezkan/Downloads/healthy/01_h.jpg',0)
 
 # convert to float32  there is no change if we dont do this!!
 #img = np.float32(img_crack1)
@@ -34,9 +35,8 @@ level = 2
 wavelet = 'haar'
 #decompose to 2nd level coefficients
 start_time1 = time.time()
-[cA2,(cH2, cV2, cD2), (cH1, cV1, cD1)]  =  pywt.wavedec2(img_raw, wavelet=wavelet,level=level)
+[cA2,(cH2, cV2, cD2), (cH1, cV1, cD1)]  =  pywt.wavedec2(img_vessel, wavelet=wavelet,level=level)
 coeffs = [cA2,(cH2, cV2, cD2)]
-
 #reconstruction
 recon_img= pywt.waverec2(coeffs, wavelet=wavelet)
 print(time.time() - start_time1)
@@ -45,11 +45,11 @@ print(time.time() - start_time1)
 # normalization 
 img_filtered = cv2.normalize(recon_img, 0, 255, cv2.NORM_MINMAX)
 
-plt.subplot(1,2,1),plt.imshow(recon_img,'gray')
-plt.subplot(1,2,2),plt.imshow(img_filtered,'gray'),
+#plt.subplot(1,2,1),plt.imshow(img_raw,'gray')
+#plt.subplot(1,2,2),plt.imshow(img_filtered*255,'gray'),
 
-plt.show()
-cv2.imwrite('WaveNorrmalized_.tif',img_filtered*255)
+#plt.show()
+cv2.imwrite('Wave_.tif',img_filtered*255)
 
 
 """
