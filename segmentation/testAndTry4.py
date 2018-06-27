@@ -64,32 +64,32 @@ for im in range(len(image_list)):
     
    
     #sigma x-y8
-    param_x = np.arange(0.75,1.26,0.25)
-    degree = np.arange(1,2.1,0.5)
+    param_x = [1.0]
+    degree = np.arange(1,10.1,0.5)
     thresh = 0.20 
 
-    v=[]
+    
     for x_i in range(len(param_x)):
-        
+        #v=[]
         for d_i in range(len(degree)):
         
-            v.append(callAsymmetricFrangi(img_fft, param_x[x_i], 0.5, degree[d_i]))
-    img_fr_max = v[0]                              
+            img_fr_max = callAsymmetricFrangi(img_fft, param_x[x_i], 0.5, degree[d_i])
+                                   
             
-    for sigma_index in range(len(v)-1):
-        img_fr_max = np.maximum(img_fr_max,v[sigma_index+1])   
-        
-    # THE part below can be optimized?????????           
-        for t in range(len(img_fr_max)):
-            for z in range(len(img_fr_max)):
-                
-                if((img_fr_max[t][z])>thresh):
+        #for sigma_index in range(len(v)-1):
+            #img_fr_max = np.maximum(img_fr_max,v[sigma_index+1])   
+            
+        # THE part below can be optimized?????????           
+            for t in range(len(img_fr_max)):
+                for z in range(len(img_fr_max)):
                     
-                    img_fr_max[t][z] = 1
+                    if((img_fr_max[t][z])>thresh):
                         
-                else:
-                    img_fr_max[t][z] = 0 
-                    
-        img_fr_max_roi = (img_fr_max*img_roi).astype(np.float32)
-        imsave(str(im)+'AFmax_ofAllSigma_thresh_0.20'+'.tif', img_fr_max_roi)       
-    
+                        img_fr_max[t][z] = 1
+                            
+                    else:
+                        img_fr_max[t][z] = 0 
+                        
+            img_fr_max_roi = (img_fr_max*img_roi).astype(np.float32)
+            imsave(str(im)+'AFmax_sigma_'+str(param_x[x_i])+'_degree'+str(degree[d_i])+'_thresh_0.20'+'.tif', img_fr_max_roi)       
+        

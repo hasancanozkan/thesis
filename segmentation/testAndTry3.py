@@ -11,9 +11,8 @@ import time
 import numpy as np
 from newROI import createROI
 from fftFunction import fft
-from AnisotropicDiffusionSourceCode import anisodiff as ad
-from cv2.ximgproc import guidedFilter
-import pywt
+from performanceMeasure import perf_measure
+
 from __builtin__ import str
 import glob
 from skimage.io import imsave
@@ -51,7 +50,7 @@ for filename in glob.glob('C:/Users/oezkan/HasanCan/RawImages/*.tif'):
 #start_time1 = time.time()
     
 for im in range(len(image_list)):   
-    if(im==15 or im==34 or im==13 or im==41):
+    
         # labeled signal
         _,labeled_crack = cv2.threshold(label_list[im],245,255,cv2.THRESH_BINARY)
         kernel_label = np.ones((1,1),np.uint8)   
@@ -65,32 +64,21 @@ for im in range(len(image_list)):
         
         img_roi=createROI(img_Eq)
         
-        #img_roi = cv2.resize(img_roi,(512,512))
-
+        class_result = ""
         #sigma x-y8
         param_x = [1.0]
-        degree = np.arange(1.5,1.6,1)
-        thresh = 0.20 
+        degree = np.arange(2.0,2.6,1)
+        thresh = 0.30 
     
         
         for x_i in range(len(param_x)):
             #v=[]
             for d_i in range(len(degree)):
-                img_filtered = cv2.bilateralFilter(img_fft,5,100,100)
-                #img_filtered = ad(img_fft, niter=3, kappa=50,gamma=0.10, option=1)
-                #img_filtered=np.uint8(img_filtered)# if not frangi does not accept img_filtered because it is float between -1 and 1
-                #img_filtered = guidedFilter(img_fft, img_fft, 2, 0.2**2)
-                #[cA2,(cH2, cV2, cD2), (cH1, cV1, cD1)]  =  pywt.wavedec2(img_fft, wavelet='haar',level=2)
-                #coeffs = [cA2,(cH2, cV2, cD2)]
-                #reconstruction
-                #recon_img= pywt.waverec2(coeffs, wavelet='haar')
-
-
-                # normalization 
-                #img_filtered = cv2.normalize(recon_img, 0, 255, cv2.NORM_MINMAX)
                 
+                img_filtered = cv2.bilateralFilter(img_fft,5,100,100)
+                start_time1 = time.time()
                 img_fr_max = callAsymmetricFrangi(img_filtered, param_x[x_i], 0.5, degree[d_i])
-                                       
+                print(time.time() - start_time1)                       
                 
             #for sigma_index in range(len(v)-1):
                 #img_fr_max = np.maximum(img_fr_max,v[sigma_index+1])   
@@ -107,5 +95,15 @@ for im in range(len(image_list)):
                             img_fr_max[t][z] = 0 
                             
                 img_fr_max_roi = (img_fr_max*img_roi).astype(np.float32)
-                imsave(str(im)+'AFmax_bl_5_sigma_'+str(param_x[x_i])+'_degree'+str(degree[d_i])+'_thresh_0.20'+'.tif', img_fr_max_roi)       
-            
+                plt.imshow(img_fr_max_roi,'gray')
+                plt.show()
+                #imsave(str(im)+'AFmax_sigma_'+str(param_x[x_i])+'_degree'+str(degree[d_i])+'_thresh_0.20'+'.tif', img_fr_max_roi)       
+                """
+                perform_result = sensitivity, _, _, _, onlyFP = perf_measure(labeled_crack, img_fr_max_roi, img_roi)
+                
+                class_result = class_result+"_x 1.0_n_1.5_thresh_0.20"+"\n" + str(perform_result)+"\n"
+
+                #save the data
+                with open(str(im)+'_AF_classification_results.txt','w') as output:
+                    output.write(str(class_result))
+"""
